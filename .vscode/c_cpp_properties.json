@@ -9,6 +9,7 @@
         "/home/mostafa/workspace/arise_pcb_gazebo_ws/install/gripper_srv/include/**",
         "/home/mostafa/workspace/arise_usecase1clean_ws/install/gripper_srv/include/**",
         "/opt/ros/humble/include/**",
+        "/home/mostafa/workspace/aiRedgio_ws/src/ur5e_move/include/**",
         "/usr/include/**"
       ],
       "name": "ROS",

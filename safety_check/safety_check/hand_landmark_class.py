@@ -10,11 +10,13 @@ from mediapipe.framework.formats import landmark_pb2
 import numpy as np
 import os
 import logging
+
 script_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(script_dir)
 parent_parent_dir = os.path.dirname(parent_dir)
-
 folder_path = os.path.join(parent_dir, "configs")
+
+
 
 MARGIN = 10  # pixels
 FONT_SIZE = 1
@@ -27,14 +29,14 @@ class SafetyLayer:
 
     ''' check the safety by having the operators hand knuck and cobot tool'''
 
-    def __init__(self,Num_hands=2,aruco_dict_type = aruco.DICT_4X4_100,marker_size_in_cm = 5,marker_id =0):
+    def __init__(self,Num_hands=2,aruco_dict_type = aruco.DICT_4X4_100,marker_size_in_cm = 5,marker_id =0, task_path = folder_path):
         self.num_hands = Num_hands
         self.BaseOptions = mp.tasks.BaseOptions
         self.HandLandmarker = mp.tasks.vision.HandLandmarker
         self.HandLandmarkerOptions = mp.tasks.vision.HandLandmarkerOptions
         self.HandLandmarkerResult = mp.tasks.vision.HandLandmarkerResult
         self.VisionRunningMode = mp.tasks.vision.RunningMode
-        self.model_path = os.path.join(folder_path, "hand_landmarker.task")
+        self.model_path = os.path.join(task_path, "hand_landmarker.task")
         self.options = self.HandLandmarkerOptions(
             base_options=self.BaseOptions(model_asset_path=self.model_path),
             running_mode=self.VisionRunningMode.LIVE_STREAM,
@@ -65,6 +67,7 @@ class SafetyLayer:
     
     def hand_knuckles_frame_flip(self):
         return cv2.flip(self.annotated_frame_knuckle,1)
+    
     def hand_knuckles_coordinate(self):
        return self.result_hand_detection
     
@@ -214,7 +217,7 @@ class SafetyLayer:
                     cv2.line(self.annotated_frame_knuckle, point_tool_flip, point_min, (0, 0, 255), 2)  # Draws a green line with thickness 2
 
                     presence = True  
-                    print("danger")
+                    # print("danger")
                     break    
         else:
             return None 

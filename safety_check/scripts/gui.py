@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
+
 import sys
 import os
-sys.path.append("...")
-import rospy
+sys.path.append('...')
+
 import tkinter as tk
 from PIL import ImageTk, Image
 from std_msgs.msg import Bool,String,Int16
@@ -15,9 +16,10 @@ import copy
 import rtde.rtde as rtde
 import rtde.rtde_config as rtde_config
 
-from desoldering_pcb import safety_class, realsense_class
-from desoldering_pcb.realsense_class import RealSense_Cam
-from desoldering_pcb.safety_class import SafetyLayer
+from safety_check.realsense_class import RealSense_Cam
+from safety_check.hand_landmark_class import SafetyLayer
+
+
 def signal_handler(sig, frame):
     print('You pressed Ctrl+C!')
     sys.exit(0)
