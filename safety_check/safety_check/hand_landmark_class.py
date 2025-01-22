@@ -228,6 +228,7 @@ class SafetyLayer:
 
 
 if __name__ == "__main__":
+  
 
     ss = SafetyLayer()
     cap = cv2.VideoCapture(0)

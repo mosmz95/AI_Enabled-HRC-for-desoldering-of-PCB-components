@@ -5,7 +5,7 @@
 
 using namespace ur_rtde;
 
-int main(int argc, char* argv[])
+int main()
 {
   RTDEIOInterface rtde_io("192.168.0.100");
   RTDEReceiveInterface rtde_receive("192.168.0.100");
