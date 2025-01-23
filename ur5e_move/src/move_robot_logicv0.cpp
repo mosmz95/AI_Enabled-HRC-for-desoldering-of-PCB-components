@@ -28,6 +28,8 @@ class NormalNode : public rclcpp::Node{
             safety_flag.data = false;
             this->list_of_components = components;
             this->list_of_safety_configs = safety_configs;
+            this->Homeconfig_of_robot = std::vector<double> {1.7249945402145386, -1.4170697343400498, 1.7957208792315882, 4.254665060634277, 4.630741119384766, 3.6119256019592285 };
+            this->go_to_home_config(); // the robot always goes to home config at first time.
 
         }
 
@@ -40,7 +42,7 @@ class NormalNode : public rclcpp::Node{
 
     std::vector<PcbComponent> list_of_components;
     std::vector<SafeRobotConfig> list_of_safety_configs;
-    
+    std::vector<double> Homeconfig_of_robot;
     void callback_safetycheck(const std::shared_ptr<custome_interfaces::msg::Safetycheck> msg_safetycheck){
 
         // RCLCPP_INFO(this->get_logger(), "The subscription to safetycheck topic has been made.");
@@ -71,6 +73,10 @@ class NormalNode : public rclcpp::Node{
 
     void safety_measure(){
         RCLCPP_INFO(this->get_logger(), "The safety measure is running.");
+    }
+
+    void go_to_home_config(){
+        RCLCPP_INFO(this->get_logger(), "The robot is going to the predefined home config.");
     }
 };
 
