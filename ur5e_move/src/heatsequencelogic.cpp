@@ -1,4 +1,4 @@
-#include "heatsequencelogic.hpp"
+#include "ur5e_move/heatsequencelogic.hpp"
 #include <cmath>
 #include <algorithm>
 #include <chrono>
@@ -8,7 +8,10 @@
 
 
 
-HeatLogicNode::HeatLogicNode(std::vector<PcbComponent> components, std::vector<SafeRobotConfig> safety_configs ):Node("ur5e_moveit_commander") {
+HeatLogicNode::HeatLogicNode(std::shared_ptr<moveit_interface_cpp::MoveRobotClass>  robot, 
+    std::vector<PcbComponent> components, std::vector<SafeRobotConfig> safety_configs )
+    :Node("ur5e_moveit_commander"), robot{robot}, pause_heating_process_ {false},
+      resume_heating_process_ {false} {
     RCLCPP_INFO(this->get_logger(),"Normal node has been initialized");
     
     safety_check_sb      = this->create_subscription<custome_interfaces::msg::Safetycheck> (
@@ -20,7 +23,11 @@ HeatLogicNode::HeatLogicNode(std::vector<PcbComponent> components, std::vector<S
     this->list_of_safety_configs = safety_configs;
     this->Homeconfig_of_robot = std::vector<double> {1.7249945402145386, -1.4170697343400498, 1.7957208792315882, 4.254665060634277, 4.630741119384766, 3.6119256019592285 };
     this->go_to_home_config(); // the robot always goes to home config at first time.
-
+    this->list_of_tuples_ = {};
+     // Initialize list_of_tuples
+    initialize_tuples();
+    heatinglogic_thread_ = std::thread(&HeatLogicNode::heatlogic, this);
+    
 }
 
     
@@ -58,17 +65,114 @@ void HeatLogicNode::safety_measure(){
 }
 
 void HeatLogicNode::go_to_home_config(){
-    RCLCPP_INFO(this->get_logger(), "The robot is going to the predefined home config.");
+    
+    std::vector<double> initial_joint_values = robot->getCurrentJointValues("Rad");
+    if (initial_joint_values.size() != Homeconfig_of_robot.size()) {
+        throw std::invalid_argument("The home config and current joint values are not consistent.");
+    }
+    double sum = 0.0;
+    for (size_t i = 0; i < initial_joint_values.size(); ++i) {
+        double diff = initial_joint_values[i] - Homeconfig_of_robot[i];
+        sum += diff * diff;
+    }
+    double norm = std::sqrt(sum);
+    if (norm > 0.01){
+            RCLCPP_INFO(this->get_logger(), "The robot is going to the predefined home config.");
+            robot->goToJointGoal(Homeconfig_of_robot,"Rad");
+    }else{
+        RCLCPP_INFO(this->get_logger(), "The robot is at home config.");
+        std_msgs::msg::String msg_;
+        msg_.data = "The robot is at home config.";
+        this->msg_to_gui_pb->publish(msg_);
+    }
+    
 }
 
+
+
+void HeatLogicNode::initialize_tuples(){
+     RCLCPP_INFO(this->get_logger(), "Components list with their distance from cobot's origin.");
+    list_of_tuples_.clear();
+
+    for (const auto& component : list_of_components) {
+        double distance = std::sqrt(
+            std::pow(component.toolPosition()[0], 2) +
+            std::pow(component.toolPosition()[1], 2) +
+            std::pow(component.toolPosition()[2], 2)
+        );
+        list_of_tuples_.emplace_back(component, distance);
+    }
+}
 
 void HeatLogicNode::heatlogic(){
     RCLCPP_INFO(this->get_logger(), "The heating process has been started.");
+    int counter = 1;
+    int done_counter = 0;
+    int done_counter_prev = 0;
+    int if_number = 0;
+
+    while (rclcpp::ok()) {
+        // Handle pausing
+        if (pause_heating_process_.load()) {
+            RCLCPP_INFO(this->get_logger(), "Task paused...");
+            while (pause_heating_process_.load() && rclcpp::ok()) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Wait until resumed
+            }
+            RCLCPP_INFO(this->get_logger(), "Task resumed...");
+        }
+
+        // Filter components with `heat_status` == false
+        std::vector<std::pair<PcbComponent, double>> filtered_tuples;
+        for (const auto& tuple : list_of_tuples_) {
+            if (!tuple.first.heatStatus()) {
+                filtered_tuples.push_back(tuple);
+            }
+        }
+
+        if (filtered_tuples.empty()) {
+            if ((counter - if_number) != 1) {
+                RCLCPP_INFO(this->get_logger(), "Heating process has been done !!!");
+                std::cout <<  "Heating process has been done !!!"<< std::endl;
+                std_msgs::msg::String msg_;
+                msg_.data = "Heating sequence has been done !!!";
+                this->msg_to_gui_pb->publish(msg_);
+
+                robot->goToJointGoal(Homeconfig_of_robot,"Rad");
+
+                done_counter_prev = done_counter;
+                done_counter = counter;
+
+                std::cout << "prev: " << done_counter_prev << std::endl;
+                std::cout << "current: " << done_counter << std::endl;
+            }
+            if_number = counter;
+        } else {
+            // Find the closest component based on distance
+            auto closest_tuple = *std::min_element(filtered_tuples.begin(), filtered_tuples.end(),
+                                                   [](const auto& a, const auto& b) {
+                                                       return a.second < b.second;
+                                                   });
+
+            // Move the cobot to the component's configuration and heat it
+            robot->goToJointGoal(closest_tuple.first.cobotConfig(),"Rad");
+            // cobot_.go_to_joint_state(closest_tuple.first.cobotconfig(), "rad");
+            std::this_thread::sleep_for(std::chrono::milliseconds(
+                static_cast<int>(closest_tuple.first.heatDuration() * 1000)));
+
+            // Mark the component as heated
+            auto it = std::find_if(list_of_tuples_.begin(), list_of_tuples_.end(),
+                                   [&closest_tuple](const auto& tuple) {
+                                       return tuple.first == closest_tuple.first;
+                                   });
+            if (it != list_of_tuples_.end()) {
+                it->first.gotHeated();
+                 RCLCPP_INFO(this->get_logger(), "Heated component is %s",it->first.componentName().c_str());
+            }
+        }
+
+        counter++;
+    }
+
 }
-
-
-
-
-
 
 

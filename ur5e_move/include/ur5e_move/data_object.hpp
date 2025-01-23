@@ -30,6 +30,7 @@ class PcbComponent {
         void removalFailure(); 
 
         bool heatStatus() const; 
+        const double& heatDuration() const;
 
         const std::vector<double>& toolPosition() const;
 
@@ -38,6 +39,8 @@ class PcbComponent {
         const std::vector<double>& cobotConfig() const; 
 
         std::vector<double> toolPose() const; 
+
+        bool operator==(const PcbComponent &rhs) const;
     private:
         std::string name_;
         std::vector<double> tool_position_;

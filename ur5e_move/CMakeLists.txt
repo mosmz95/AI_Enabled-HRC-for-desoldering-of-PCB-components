@@ -35,7 +35,7 @@ target_link_libraries(rtde_usage  PRIVATE ur_rtde::rtde)
 
 add_executable(obj_test src/test_obj.cpp src/data_object.cpp)
 
-add_executable(sequence_logic src/move_robot_logicv0.cpp src/moverobotclass.cpp src/data_object.cpp)
+add_executable(sequence_logic src/move_robot_logicv0.cpp src/moverobotclass.cpp src/data_object.cpp src/heatsequencelogic.cpp)
 ament_target_dependencies(sequence_logic rclcpp Boost custome_interfaces  ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 

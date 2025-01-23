@@ -22,6 +22,11 @@ bool PcbComponent::heatStatus() const {
     return is_heated_;
 }
 
+const double& PcbComponent::heatDuration() const {
+    return heat_duration_;
+}
+
+
 const std::vector<double>& PcbComponent::toolPosition() const {
     return tool_position_;
 }
@@ -41,6 +46,16 @@ std::vector<double> PcbComponent::toolPose() const {
 }
 
 
+
+
+bool PcbComponent::operator==(const PcbComponent &rhs) const{
+    if (this->name_ == rhs.componentName()){
+        return true;
+    }else{
+        return false;
+    }
+
+}
 
 
 
