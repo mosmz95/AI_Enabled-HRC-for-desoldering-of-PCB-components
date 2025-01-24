@@ -1,0 +1,10 @@
+#request
+uint8 component_id
+---
+#response
+
+sensor_msgs/Image annotated_frame
+float64[] location_x #x coordinate of center of component in pixel
+float64[] location_y #x coordinate of center of component in pixel
+float64[] component_class #x coordinate of center of component in pixel
+

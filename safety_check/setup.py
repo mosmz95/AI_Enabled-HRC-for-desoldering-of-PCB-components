@@ -12,6 +12,7 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name, 'configs'), glob('configs/*.task')),
+        (os.path.join('share', package_name, 'configs'), glob('configs/*')),
     ],
     install_requires=['setuptools','pyrealsense2','cv2'],
     zip_safe=True,
@@ -22,8 +23,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [ 
-            "handlandmark = safety_check.hand_landmarker_publisher:main",
-            "gui = safety_check.graphical_user_interface:main"
+            "handlandmark =safety_check.scripts.hand_landmarker_publisher:main",
+            "gui = safety_check.scripts.graphical_user_interface:main"
         ],
     },
 )
