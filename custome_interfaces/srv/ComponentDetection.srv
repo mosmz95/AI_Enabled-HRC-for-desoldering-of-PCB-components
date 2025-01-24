@@ -1,5 +1,7 @@
 #request
 uint8 component_id
+sensor_msgs/Image raw_frame
+
 ---
 #response
 
