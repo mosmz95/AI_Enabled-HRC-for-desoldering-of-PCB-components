@@ -21,7 +21,9 @@ setup(
     license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
-        'console_scripts': [
+        'console_scripts': [ 
+            "handlandmark = safety_check.hand_landmarker_publisher:main",
+            "gui = safety_check.graphical_user_interface:main"
         ],
     },
 )

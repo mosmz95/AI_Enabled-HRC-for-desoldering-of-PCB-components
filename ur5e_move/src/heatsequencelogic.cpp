@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <chrono>
 #include <thread>
-
+#include "rclcpp/rclcpp.hpp"
 
 
 
@@ -16,6 +16,9 @@ HeatLogicNode::HeatLogicNode(std::shared_ptr<moveit_interface_cpp::MoveRobotClas
     
     safety_check_sb      = this->create_subscription<custome_interfaces::msg::Safetycheck> (
     "knuckle_image", 1,std::bind(&HeatLogicNode::callback_safetycheck,this,std::placeholders::_1));//  
+
+    heating_status_of_component_check_sb = this->create_subscription<std_msgs::msg::String> (
+    "heating_status_of_component", 10,std::bind(&HeatLogicNode::callback_heatingstatusofcomponent,this,std::placeholders::_1));//  
 
     msg_to_gui_pb = this->create_publisher<std_msgs::msg::String>("msgtogui",10);
     safety_flag.data = false;
@@ -59,6 +62,23 @@ void HeatLogicNode::callback_safetycheck(const std::shared_ptr<custome_interface
 
 }
 
+// This function changes the heating status of a component to false.
+void HeatLogicNode::callback_heatingstatusofcomponent(const std::shared_ptr<std_msgs::msg::String> msg_heatingstatus){
+    std_msgs::msg::String component_name = *msg_heatingstatus;
+    RCLCPP_INFO(this->get_logger(), "Heating status of %s is going to be changed to False.", component_name.data.c_str());
+
+    // Mark the component as heated
+    auto it = std::find_if(this->list_of_tuples_.begin(), this->list_of_tuples_.end(),
+                            [&component_name](const auto& tuple) {
+                                return tuple.first.componentName() == component_name.data;
+                            });
+    if (it != list_of_tuples_.end()) {
+        it->first.removalFailure();
+        RCLCPP_INFO(this->get_logger(), "Heating status of component %s is changed to False", it->first.componentName().c_str());
+    }else{
+        RCLCPP_INFO(this->get_logger(), "The component with the %s name does no exist in database.", component_name.data.c_str());
+    }
+}
 
 void HeatLogicNode::safety_measure(){
     RCLCPP_INFO(this->get_logger(), "The safety measure is running.");
@@ -166,7 +186,7 @@ void HeatLogicNode::heatlogic(){
                                    });
             if (it != list_of_tuples_.end()) {
                 it->first.gotHeated();
-                 RCLCPP_INFO(this->get_logger(), "Heated component is %s",it->first.componentName().c_str());
+                RCLCPP_INFO(this->get_logger(), "Heated component is %s",it->first.componentName().c_str());
             }
         }
 
@@ -174,5 +194,6 @@ void HeatLogicNode::heatlogic(){
     }
 
 }
+
 
 

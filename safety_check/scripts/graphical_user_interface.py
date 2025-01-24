@@ -146,7 +146,8 @@ class MyGUI(tk.Tk):
         # it should change the color of led to green corresponding in appropriate heating 
         self.leds[f"led{key}"].set_color("yellow")
         msg = String()
-        msg.data = f"led {key}"
+        # msg.data = f"led {key}"
+        msg.data = f"component_{key}"
         self.rosnode.reset_button_pub.publish(msg)
         self.rosnode.get_logger().info(f"Heating process of component {key} is not yet completed.")
         self.insert_text_and_scroll(f" Heating process of component {key} is not yet completed.\n\n")  # Insert the new text
@@ -175,12 +176,12 @@ class MyGUI(tk.Tk):
         #self.cameraframe.place(relx=0.6, rely=0.4, anchor='nw')
     
     def gui_periodic_update(self):
-        print("HIIII")
+        # print("HIIII")
         if self.rosnode.incomming_frame is not None and self.rosnode.incomming_frame_flag:
             self.update_incoming_frame(self.rosnode.incomming_frame)
             self.rosnode.incomming_frame_flag = False
-            print("in sd")
-        rclpy.spin_once(self.rosnode, timeout_sec=0.1)
+            # print("in sd")
+        # rclpy.spin_once(self.rosnode, timeout_sec=0.1)
         self.after(self.gui_update_interval, self.gui_periodic_update)
 
     def run_gui(self):
@@ -195,7 +196,7 @@ class GUIROS(Node):
     def __init__(self):
         super().__init__("gui_safety_monitoring")
 
-        self.reset_button_pub = self.create_publisher(String, "/guiresetbutton",1)
+        self.reset_button_pub = self.create_publisher(String, "heating_status_of_component",1)
         self.sub_knuckle_image = self.create_subscription(Safetycheck,'knuckle_image',self.sub_comingframe_cb,10)
         self.get_logger().info("Gui node has been started.")
         self.imagebridge = CvBridge() # for conversion of cv images to ros2 images
@@ -212,18 +213,17 @@ class GUIROS(Node):
         self.incomming_frame_flag = True
 
 
-# def ros_spin(rosnode, mygui):
-#     while rclpy.ok():
-#         rclpy.spin_once(rosnode, timeout_sec=0.1)
-#         # Update the GUI with the latest frame if available
-#         # if rosnode.incomming_frame is not None:
-#         #     mygui.update_incoming_frame(rosnode.incomming_frame)
+def ros_spin(rosnode, mygui):
+    while rclpy.ok():
+        rclpy.spin_once(rosnode, timeout_sec=0.1)
+        # Update the GUI with the latest frame if available
+        # if rosnode.incomming_frame is not None:
+        #     mygui.update_incoming_frame(rosnode.incomming_frame)
 
 
-if __name__=="__main__":
-   
 
-   
+def main():
+
     rclpy.init(args=None)
     rosnode = GUIROS()
 
@@ -239,9 +239,9 @@ if __name__=="__main__":
                                   rosnode=rosnode)
 
    
-    # ros_thread = threading.Thread(target=ros_spin, args=(rosnode, mygui))
-    # ros_thread.daemon = True
-    # ros_thread.start()
+    ros_thread = threading.Thread(target=ros_spin, args=(rosnode, mygui))
+    ros_thread.daemon = True
+    ros_thread.start()
 
     print("dd")
     try:
@@ -251,3 +251,8 @@ if __name__=="__main__":
 
     # Cleanup
     rclpy.shutdown()
+    ros_thread.join()
+if __name__=="__main__":
+    main()
+   
+   

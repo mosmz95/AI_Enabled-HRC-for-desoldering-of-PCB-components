@@ -24,6 +24,10 @@ class HeatLogicNode : public rclcpp::Node{
     std::shared_ptr<rclcpp::Subscription<custome_interfaces::msg::Safetycheck>> safety_check_sb;
     std::shared_ptr<rclcpp::Publisher<std_msgs::msg::String>> msg_to_gui_pb;
 
+    std::shared_ptr<rclcpp::Subscription<std_msgs::msg::String>> heating_status_of_component_check_sb;
+
+
+
     std::vector<double> Homeconfig_of_robot;
 
     std_msgs::msg::Bool safety_flag; 
@@ -39,6 +43,7 @@ class HeatLogicNode : public rclcpp::Node{
 
     void callback_safetycheck(const std::shared_ptr<custome_interfaces::msg::Safetycheck> msg_safetycheck);
 
+    void callback_heatingstatusofcomponent(const std::shared_ptr<std_msgs::msg::String> msg_heatingstatus);
 
 
 
