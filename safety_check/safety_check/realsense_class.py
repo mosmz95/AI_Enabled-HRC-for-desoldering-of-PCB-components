@@ -166,37 +166,41 @@ if __name__ == "__main__":
         # Start streaming
         pipeline.start(config)
 
-   
+    # success = cv2.imwrite(output_path, frame)
     # Load the YOLOv8 model
-    model = YOLO("/home/mostafa/workspace/aiRedgio_ws/src/safety_check/scripts/best.pt", verbose = False)
-    print(model.names)
-    class_group = []
-    result = None
-    while True:
-        key = input('Enter the class you want to detect: \n')
-        if key.isdigit():
-            class_group.append(int(key))
-        elif key == 'q':
-            break
+    # model = YOLO("/home/mostafa/workspace/aiRedgio_ws/src/safety_check/scripts/best.pt", verbose = False)
+    # print(model.names)
+    # class_group = []
+    # result = None
+    # while True:
+    #     key = input('Enter the class you want to detect: \n')
+    #     if key.isdigit():
+    #         class_group.append(int(key))
+    #     elif key == 'q':
+    #         break
+
+    counter = 1
     while True:
 
         depth, frame = cam.get_frame_from_realsense(pipeline,aligned_frame=False)
 
+        if counter == 5:
+            success = cv2.imwrite('/home/mostafa/workspace/aiRedgio_ws/src/safety_check/safety_check/', frame)
         # imageData = np.asarray(bytearray(resp), dtype="uint8")
         # pilImage=np.array(Image.open(io.BytesIO(imageData)))
-        results = model(frame, classes = class_group, verbose = False)
+        # results = model(frame, classes = class_group, verbose = False)
         # print("hhh")
         # print("run_until_here")
         # Visualize the results on the frame
-        annotated_frame = results[0].plot()
-        cv2.imshow('Align Example', annotated_frame)
-        if result is None:
-            # print(annotated_frame.shape)
-            size = (int(annotated_frame.shape[1]), int(annotated_frame.shape[0]))
-            result = cv2.VideoWriter('filename.avi', 
-						cv2.VideoWriter_fourcc(*'MJPG'), 
-						5, size)
-        result.write(annotated_frame)  
+        # annotated_frame = results[0].plot()
+        cv2.imshow('Align Example', frame)
+        # if result is None:
+        #     # print(annotated_frame.shape)
+        #     size = (int(annotated_frame.shape[1]), int(annotated_frame.shape[0]))
+        #     result = cv2.VideoWriter('filename.avi', 
+		# 				cv2.VideoWriter_fourcc(*'MJPG'), 
+		# 				5, size)
+        # result.write(annotated_frame)  
         key = cv2.waitKey(1)
         # Press esc or 'q' to close the image window
         if key & 0xFF == ord('q') or key == 27:

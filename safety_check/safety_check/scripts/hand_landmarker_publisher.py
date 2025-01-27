@@ -57,10 +57,15 @@ class GUIROS(Node):
         super().__init__("hand_landmark_monitoring")
 
         self.pub_handpresence_ = self.create_publisher(Bool,'/handpresence/flag', 1)
-        self.annotated_images_publisher = self.create_publisher(Safetycheck , "knuckle_image",10)
         self.timer = self.create_timer(0.1, self.timer_callback)  # 10 Hz timer
+        self.annotated_images_publisher = self.create_publisher(Safetycheck , "knuckle_image",10)
+       
+        self.rawimages_publisher = self.create_publisher(Image , "rawframe_topcamera",10)
 
         self.imagebridge = CvBridge() # for conversion of cv images to ros2 images
+        self.rawframe = None
+
+
     def timer_callback(self):
         msg_tobe_sent = Safetycheck()
         depth, frame = cam.get_frame_from_realsense(pipeline,aligned_frame=False)
@@ -68,6 +73,9 @@ class GUIROS(Node):
             self.get_logger().error("Failed to capture frame from RealSense!")
             return
         else:    
+            self.rawframe = frame
+           
+
             state = con.receive()
             frame = safty_lr.track_marker(frame=frame,theta = state.target_q[5])
 
@@ -93,15 +101,16 @@ class GUIROS(Node):
             
             
             msg_tobe_sent.annotated_image =  self.imagebridge.cv2_to_imgmsg(final_image, encoding='bgr8')
-
+            rawImage_tobesent = self.imagebridge.cv2_to_imgmsg( self.rawframe, encoding='bgr8')
+            self.rawimages_publisher.publish(rawImage_tobesent)
             self.annotated_images_publisher.publish(msg_tobe_sent)
             
-            cv2.imshow('Align Example', final_image)
-            key = cv2.waitKey(1)
-            if key & 0xFF == ord('q'):
-                cv2.destroyAllWindows()
-                rclpy.shutdown()
-                exit()
+            # cv2.imshow('Align Example', final_image)
+            # key = cv2.waitKey(1)
+            # if key & 0xFF == ord('q'):
+            #     cv2.destroyAllWindows()
+            #     rclpy.shutdown()
+            #     exit()
         
 
 

@@ -14,7 +14,7 @@ setup(
         (os.path.join('share', package_name, 'configs'), glob('configs/*.task')),
         (os.path.join('share', package_name, 'configs'), glob('configs/*')),
     ],
-    install_requires=['setuptools','pyrealsense2','cv2'],
+    install_requires=['setuptools','pyrealsense2','opencv-python','opencv-python-headless'],
     zip_safe=True,
     maintainer='mostafa',
     maintainer_email='mostafazarei1995mz@gmail.com',
@@ -24,7 +24,10 @@ setup(
     entry_points={
         'console_scripts': [ 
             "handlandmark =safety_check.scripts.hand_landmarker_publisher:main",
-            "gui = safety_check.scripts.graphical_user_interface:main"
+            "gui = safety_check.scripts.graphical_user_interfacev1:main",
+            "component_selection_client = safety_check.scripts.component_selection_gui_client:main",
+            "component_detection_server = safety_check.scripts.component_detection_server:main"
+
         ],
     },
 )
