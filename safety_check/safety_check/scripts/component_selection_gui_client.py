@@ -8,12 +8,17 @@ import os
 from PIL import Image, ImageTk
 from functools import partial
 from custome_interfaces.srv import ComponentDetection
+from custome_interfaces.msg import ComponentData
+
 import threading
 from sensor_msgs.msg import Image as ROSImage
 from ament_index_python.packages import get_package_share_directory
+
 package_share_directory = get_package_share_directory('safety_check')
 folder_path = os.path.join(package_share_directory, "configs")
+
 # Component dictionary
+
 COMPONENTS = {
     0: 'Capacitor', 1: 'IC', 2: 'LED', 3: 'Resistor', 4: 'battery', 5: 'buzzer',
     6: 'clock', 7: 'connector', 8: 'diode', 9: 'display', 10: 'fuse', 11: 'inductor',
@@ -31,6 +36,8 @@ class ComponentPublisherNode(Node):
 
         self.rawframe_subscription  = self.create_subscription( ROSImage,"rawframe_topcamera", self.callback_from_raw_frame,10 )
         self.recording_command_to_vosk_publisher = self.create_publisher(String, '/robot_listening', 1  )
+        self.detected_componentdata_publisher = self.create_publisher(ComponentData, '/detected_component_data', 1  )
+
         
         self.component_detection_client = self.create_client(ComponentDetection,'component_bounding_box')
         self.rawframe_subscription = None
@@ -83,7 +90,15 @@ class ComponentPublisherNode(Node):
             component_class = response_.component_class#x coordinate of cen
             self.boundingboximages_publisher.publish(frame_with_bbx)
             self.bbx_frame =  self.bbx_imagebridge.imgmsg_to_cv2(frame_with_bbx, desired_encoding='bgr8') 
+
+
             self.bbx_frame_flag = True
+            cmp_data = ComponentData()
+            cmp_data.location_x = location_x
+            cmp_data.location_y = location_y
+            cmp_data.component_class = component_class
+
+            self.detected_componentdata_publisher.publish(cmp_data)
             print(type(location_x))
             self.get_logger().info("Bounding box frame received:")
             self.get_logger().info(f"Component Class IDs: {list(component_class)}")
