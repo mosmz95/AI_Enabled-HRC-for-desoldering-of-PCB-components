@@ -1,14 +1,18 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Int32,UInt8
+from std_msgs.msg import Int32,UInt8,String
 import tkinter as tk
 from cv_bridge import CvBridge
 import cv2
+import os
 from PIL import Image, ImageTk
 from functools import partial
 from custome_interfaces.srv import ComponentDetection
 import threading
 from sensor_msgs.msg import Image as ROSImage
+from ament_index_python.packages import get_package_share_directory
+package_share_directory = get_package_share_directory('safety_check')
+folder_path = os.path.join(package_share_directory, "configs")
 # Component dictionary
 COMPONENTS = {
     0: 'Capacitor', 1: 'IC', 2: 'LED', 3: 'Resistor', 4: 'battery', 5: 'buzzer',
@@ -26,6 +30,8 @@ class ComponentPublisherNode(Node):
         self.boundingboximages_publisher = self.create_publisher(ROSImage, "bounding_box_image",10)
 
         self.rawframe_subscription  = self.create_subscription( ROSImage,"rawframe_topcamera", self.callback_from_raw_frame,10 )
+        self.recording_command_to_vosk_publisher = self.create_publisher(String, '/robot_listening', 1  )
+        
         self.component_detection_client = self.create_client(ComponentDetection,'component_bounding_box')
         self.rawframe_subscription = None
         self.raw_frame = None # frame comming from camera
@@ -34,6 +40,7 @@ class ComponentPublisherNode(Node):
         self.bbx_frame = None
         self.bbx_imagebridge = CvBridge()
         self.bbx_frame_flag = False
+
         while not self.component_detection_client.wait_for_service(1):
             self.get_logger().warn("Waiting for server of component detection ...")
 
@@ -98,9 +105,9 @@ class ComponentPublisherNode(Node):
 
 # GUI Application
 class ComponentGUI:
-    def __init__(self, ros_node):
+    def __init__(self, ros_node,file_path):
         self.ros_node = ros_node
-
+        self.file_path = file_path
         # Initialize tkinter
         self.root = tk.Tk()
         self.root.title("Component Selector")
@@ -111,15 +118,37 @@ class ComponentGUI:
         self.frame_label = tk.Label(self.root, image=None)
         self.frame_label.place(relx=0.6, rely=0.05, anchor='nw')
 
+    
+
+        self.voskicon = ImageTk.PhotoImage(self.photo_resize(os.path.join(self.file_path,"vosk_icon.png")))#
+        vosk_activation_button = tk.Button(self.root, text="VOSK Activator", image=self.voskicon, compound=tk.TOP,
+                        command=self.vosk_activation_button_cb, font=("Helvetica", 12))
+        vosk_activation_button.place(relx=0.4, rely=0.01, anchor='nw')
+
+    def vosk_activation_button_cb(self):
+        self.ros_node.get_logger().info(f"The vosk is listenning to you")
+        msg_to_be_sent_vosk = String()
+        msg_to_be_sent_vosk.data = "Activate the VOSK"
+        self.ros_node.recording_command_to_vosk_publisher.publish(msg_to_be_sent_vosk)
+        return
+    
+    def photo_resize(self,image_path):
+        image = Image.open(image_path)
+        image = image.resize((100, 100), Image.Resampling.LANCZOS)
+        # photo = ImageTk.PhotoImage(image)
+        return image
+
     def create_gui(self):
         # Create a frame to hold the components
         frame = tk.Frame(self.root)
         frame.pack(fill=tk.BOTH, expand=True)
-      
+
         # Load and display component images with buttons
         for idx, component_name in COMPONENTS.items():
             # Load image
-            image_path = f'/home/mostafa/workspace/aiRedgio_ws/src/safety_check/configs/{component_name.lower()}.jpg'  # Ensure the images are named properly
+            # image_path_= f'/home/mostafa/workspace/aiRedgio_ws/src/safety_check/configs/{component_name.lower()}.jpg'  # Ensure the images are named properly
+            image_path = os.path.join(self.file_path,f'{component_name.lower()}.jpg')  # Ensure the images are named properly
+
             try:
                 image = Image.open(image_path)
                 image = image.resize((100, 100), Image.Resampling.LANCZOS)
@@ -186,7 +215,7 @@ def main():
 
     rclpy.init(args=None)
     rosnode = ComponentPublisherNode()
-    mygui = ComponentGUI(rosnode)
+    mygui = ComponentGUI(rosnode,folder_path)
     ros_thread = threading.Thread(target=ros_spin, args=(rosnode,))
     ros_thread.daemon = True
     ros_thread.start()
