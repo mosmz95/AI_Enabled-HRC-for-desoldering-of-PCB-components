@@ -31,8 +31,9 @@ class ComponentPublisherNode(Node):
         self.raw_frame = None # frame comming from camera
         self.imagebridge = CvBridge()
         self.component_id = None
-        self.bbxframe = None
-
+        self.bbx_frame = None
+        self.bbx_imagebridge = CvBridge()
+        self.bbx_frame_flag = False
         while not self.component_detection_client.wait_for_service(1):
             self.get_logger().warn("Waiting for server of component detection ...")
 
@@ -74,7 +75,8 @@ class ComponentPublisherNode(Node):
             location_y = response_.location_y #x coordinate of center of component in pixel
             component_class = response_.component_class#x coordinate of cen
             self.boundingboximages_publisher.publish(frame_with_bbx)
-            self.bbxframe = frame_with_bbx
+            self.bbx_frame =  self.bbx_imagebridge.imgmsg_to_cv2(frame_with_bbx, desired_encoding='bgr8') 
+            self.bbx_frame_flag = True
             print(type(location_x))
             self.get_logger().info("Bounding box frame received:")
             self.get_logger().info(f"Component Class IDs: {list(component_class)}")
@@ -106,6 +108,8 @@ class ComponentGUI:
         # Set up GUI layout
         self.create_gui()
 
+        self.frame_label = tk.Label(self.root, image=None)
+        self.frame_label.place(relx=0.6, rely=0.05, anchor='nw')
 
     def create_gui(self):
         # Create a frame to hold the components
@@ -142,7 +146,7 @@ class ComponentGUI:
 
         self.ros_node.component_id  = component_id
 
-    def update_frame(self, frame_with_bbx):
+    def update_bbx_frame(self, frame_with_bbx):
         # Convert OpenCV image to PIL format
         frame_rgb = cv2.cvtColor(frame_with_bbx, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB
         img = Image.fromarray(frame_rgb)
@@ -152,10 +156,18 @@ class ComponentGUI:
         self.frame_label.imgtk = imgtk  # Keep a reference to avoid garbage collection
         self.frame_label.configure(image=imgtk)
 
-        
+    def gui_bbx_periodic_update(self):
+        # print("HIIII")
+        if self.ros_node.bbx_frame is not None and self.ros_node.bbx_frame_flag:
+            self.update_bbx_frame(self.ros_node.bbx_frame)
+            self.ros_node.bbx_frame_flag = False
+            # print("in sd")
+        # rclpy.spin_once(self.rosnode, timeout_sec=0.1)
+        self.root.after(100, self.gui_bbx_periodic_update)
 
 
     def run_gui(self):
+        self.gui_bbx_periodic_update()
         self.root.mainloop()
 
 

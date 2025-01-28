@@ -24,7 +24,7 @@ setup(
     entry_points={
         'console_scripts': [ 
             "handlandmark =safety_check.scripts.hand_landmarker_publisher:main",
-            "gui = safety_check.scripts.graphical_user_interfacev1:main",
+            "gui = safety_check.scripts.graphical_user_interfacev2:main",
             "component_selection_client = safety_check.scripts.component_selection_gui_client:main",
             "component_detection_server = safety_check.scripts.component_detection_server:main"
 

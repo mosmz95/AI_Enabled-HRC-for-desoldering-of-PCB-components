@@ -64,7 +64,7 @@ class GUIROS(Node):
 
         self.imagebridge = CvBridge() # for conversion of cv images to ros2 images
         self.rawframe = None
-
+        self.raw_imagebridge = CvBridge() 
 
     def timer_callback(self):
         msg_tobe_sent = Safetycheck()
@@ -73,8 +73,10 @@ class GUIROS(Node):
             self.get_logger().error("Failed to capture frame from RealSense!")
             return
         else:    
+
             self.rawframe = frame
-           
+            rawImage_tobesent = self.raw_imagebridge.cv2_to_imgmsg( self.rawframe, encoding='bgr8')
+            self.rawimages_publisher.publish(rawImage_tobesent)
 
             state = con.receive()
             frame = safty_lr.track_marker(frame=frame,theta = state.target_q[5])
@@ -101,8 +103,7 @@ class GUIROS(Node):
             
             
             msg_tobe_sent.annotated_image =  self.imagebridge.cv2_to_imgmsg(final_image, encoding='bgr8')
-            rawImage_tobesent = self.imagebridge.cv2_to_imgmsg( self.rawframe, encoding='bgr8')
-            self.rawimages_publisher.publish(rawImage_tobesent)
+            
             self.annotated_images_publisher.publish(msg_tobe_sent)
             
             # cv2.imshow('Align Example', final_image)
