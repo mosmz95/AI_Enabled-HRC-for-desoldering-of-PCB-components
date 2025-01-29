@@ -10,6 +10,8 @@
 #include "ur5e_move/data_object.hpp"
 #include "custom_interfaces/msg/safetycheck.hpp"
 #include "custom_interfaces/msg/componentdata.hpp"
+#include "custom_interfaces/msg/llmfeedback.hpp"
+
 
 
 
@@ -28,6 +30,8 @@ class HeatLogicNode : public rclcpp::Node{
 
     std::shared_ptr<rclcpp::Subscription<std_msgs::msg::String>> heating_status_of_component_check_sb;
     std::shared_ptr<rclcpp::Subscription<custom_interfaces::msg::Componentdata>> detected_component_data_sb;
+    std::shared_ptr<rclcpp::Subscription<custom_interfaces::msg::Llmfeedback>> info_from_llm_sb; // the operator request from llm
+
 
 
 
@@ -49,6 +53,8 @@ class HeatLogicNode : public rclcpp::Node{
     void callback_heatingstatusofcomponent(const std::shared_ptr<std_msgs::msg::String> msg_heatingstatus);
 
     void callback_ComponentData(const std::shared_ptr<custom_interfaces::msg::Componentdata> msg_componentData);
+    void callback_info_llm(const std::shared_ptr<custom_interfaces::msg::Llmfeedback> msg_llminfo);
+
 
 
 

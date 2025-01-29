@@ -23,6 +23,9 @@ HeatLogicNode::HeatLogicNode(std::shared_ptr<moveit_interface_cpp::MoveRobotClas
     heating_status_of_component_check_sb = this->create_subscription<std_msgs::msg::String> (
     "heating_status_of_component", 10,std::bind(&HeatLogicNode::callback_heatingstatusofcomponent,this,std::placeholders::_1));//  
 
+    info_from_llm_sb = this->create_subscription<custom_interfaces::msg::Llmfeedback> (
+    "/com_id", 10,std::bind(&HeatLogicNode::callback_info_llm,this,std::placeholders::_1));// 
+
     msg_to_gui_pb = this->create_publisher<std_msgs::msg::String>("msgtogui",10);
     safety_flag.data = false;
     this->list_of_components = components;
@@ -32,7 +35,7 @@ HeatLogicNode::HeatLogicNode(std::shared_ptr<moveit_interface_cpp::MoveRobotClas
     this->list_of_tuples_ = {};
      // Initialize list_of_tuples
     initialize_tuples();
-    heatinglogic_thread_ = std::thread(&HeatLogicNode::heatlogic, this);
+    // heatinglogic_thread_ = std::thread(&HeatLogicNode::heatlogic, this);
     
 }
 
@@ -62,6 +65,36 @@ void HeatLogicNode::callback_safetycheck(const std::shared_ptr<custom_interfaces
     }
 
     // RCLCPP_INFO(this->get_logger(), "The hand presense status is: %s", this->safety_flag.data ? "True": "False");
+
+}
+void HeatLogicNode::callback_info_llm(const std::shared_ptr<custom_interfaces::msg::Llmfeedback> msg_llminfo){
+    RCLCPP_INFO(this->get_logger(), "A new Llm request from the operator has been received.");
+    // type must be ComponentCounter or ComponentClass
+    unsigned int component_counter {0};
+    std::string class_or_component = msg_llminfo->type;
+    
+    if ( class_or_component == "ComponentCounter" ){
+
+        component_counter = msg_llminfo->number_id;
+        if(component_counter > 0 && component_counter <= this->list_of_components.size() ){
+            PcbComponent selected_component = this->list_of_components.at(component_counter - 1);
+            robot->goToJointGoal(selected_component.cobotConfig(),"Rad");
+                // cobot_.go_to_joint_state(closest_tuple.first.cobotconfig(), "rad");
+            std::this_thread::sleep_for(std::chrono::milliseconds(
+                    static_cast<int>(selected_component.heatDuration() * 1000)));
+
+            robot->goToJointGoal(Homeconfig_of_robot,"Rad");
+        }else{
+            RCLCPP_ERROR(this->get_logger(), "Invalid component index received.");
+
+        }
+
+    }else if (class_or_component == "ComponentClass"){
+
+            RCLCPP_INFO(this->get_logger(), "The class of components for desoldering has been sepcified.");
+
+    }
+    
 
 }
 
