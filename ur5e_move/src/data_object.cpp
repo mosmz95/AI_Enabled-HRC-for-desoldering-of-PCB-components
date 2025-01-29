@@ -112,3 +112,44 @@ std::pair<std::vector<PcbComponent>, std::vector<SafeRobotConfig>> extract_data(
 
     return {list_of_components, list_of_safetyconfigs};
 }
+
+
+// this function returns a vector of PcbComponents from the ROS msg
+std::vector<PcbComponent> createComponentsFromROSMsg(const std::vector<double> &location_x,
+                                                     const std::vector<double> &location_y,
+                                                     const std::vector<uint8_t> &component_class) {
+    // Fixed values for orientation, cobot_config, and heat_time
+    std::vector<double> empty_orientation; // Empty vector for orientation
+    std::vector<double> empty_cobot_config; // Empty vector for cobot configuration
+    double fixed_heat_time = 3.0; // Fixed heat time in seconds (example)
+
+    // Predefined names for components based on their class IDs
+    std::vector<std::string> component_names = {
+        "Capacitor", "IC", "LED", "Resistor", "Battery", "Buzzer", "Clock",
+        "Connector", "Diode", "Display", "Fuse", "Inductor", "Potentiometer",
+        "Relay", "Switch", "Transistor"
+    };
+
+    // Vector to store PcbComponent instances
+    std::vector<PcbComponent> components;
+
+    // Check if input vectors have the same size
+    if (location_x.size() != location_y.size() || location_x.size() != component_class.size()) {
+        std::cerr << "Error: Input vectors must have the same size!" << std::endl;
+        return components;
+    }
+
+    // Create components
+    for (size_t i = 0; i < location_x.size(); ++i) {
+        // Position of the component
+        std::vector<double> position = {location_x[i], location_y[i]};
+
+        // Get the name of the component based on its class ID
+        std::string name = (component_class[i] < component_names.size()) ? component_names[component_class[i]]+ "_" + std::to_string(i) : "Unknown";
+
+        // Create a PcbComponent instance and add it to the vector
+        components.emplace_back(name, position, empty_orientation, empty_cobot_config, fixed_heat_time);
+    }
+
+    return components;
+}

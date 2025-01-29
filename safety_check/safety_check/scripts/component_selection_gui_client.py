@@ -7,8 +7,8 @@ import cv2
 import os
 from PIL import Image, ImageTk
 from functools import partial
-from custome_interfaces.srv import ComponentDetection
-from custome_interfaces.msg import ComponentData
+from custom_interfaces.srv import ComponentDetection
+from custom_interfaces.msg import Componentdata
 
 import threading
 from sensor_msgs.msg import Image as ROSImage
@@ -36,7 +36,7 @@ class ComponentPublisherNode(Node):
 
         self.rawframe_subscription  = self.create_subscription( ROSImage,"rawframe_topcamera", self.callback_from_raw_frame,10 )
         self.recording_command_to_vosk_publisher = self.create_publisher(String, '/robot_listening', 1  )
-        self.detected_componentdata_publisher = self.create_publisher(ComponentData, '/detected_component_data', 1  )
+        self.detected_componentdata_publisher = self.create_publisher(Componentdata, '/detected_component_data', 1  )
 
         
         self.component_detection_client = self.create_client(ComponentDetection,'component_bounding_box')
@@ -93,7 +93,7 @@ class ComponentPublisherNode(Node):
 
 
             self.bbx_frame_flag = True
-            cmp_data = ComponentData()
+            cmp_data = Componentdata()
             cmp_data.location_x = location_x
             cmp_data.location_y = location_y
             cmp_data.component_class = component_class

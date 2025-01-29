@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(custome_interfaces)
+project(custom_interfaces)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -15,7 +15,8 @@ find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Safetycheck.msg"
-  "msg/ComponentData.msg"
+  "msg/Componentdata.msg"
+  "msg/Llmfeedback.msg"
   "srv/ComponentDetection.srv"
   DEPENDENCIES geometry_msgs std_msgs sensor_msgs # Add packages that above messages depend on, in this case geometry_msgs for Sphere.msg
 )

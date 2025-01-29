@@ -8,7 +8,9 @@
 #include <thread>
 #include "ur5e_move/moverobotclass.hpp"
 #include "ur5e_move/data_object.hpp"
-#include "custome_interfaces/msg/safetycheck.hpp"
+#include "custom_interfaces/msg/safetycheck.hpp"
+#include "custom_interfaces/msg/componentdata.hpp"
+
 
 
 
@@ -21,10 +23,11 @@ class HeatLogicNode : public rclcpp::Node{
     
     private:
     std::shared_ptr<moveit_interface_cpp::MoveRobotClass> robot;
-    std::shared_ptr<rclcpp::Subscription<custome_interfaces::msg::Safetycheck>> safety_check_sb;
+    std::shared_ptr<rclcpp::Subscription<custom_interfaces::msg::Safetycheck>> safety_check_sb;
     std::shared_ptr<rclcpp::Publisher<std_msgs::msg::String>> msg_to_gui_pb;
 
     std::shared_ptr<rclcpp::Subscription<std_msgs::msg::String>> heating_status_of_component_check_sb;
+    std::shared_ptr<rclcpp::Subscription<custom_interfaces::msg::Componentdata>> detected_component_data_sb;
 
 
 
@@ -41,9 +44,11 @@ class HeatLogicNode : public rclcpp::Node{
     std::atomic<bool> resume_heating_process_;
     std::thread heatinglogic_thread_;
 
-    void callback_safetycheck(const std::shared_ptr<custome_interfaces::msg::Safetycheck> msg_safetycheck);
+    void callback_safetycheck(const std::shared_ptr<custom_interfaces::msg::Safetycheck> msg_safetycheck);
 
     void callback_heatingstatusofcomponent(const std::shared_ptr<std_msgs::msg::String> msg_heatingstatus);
+
+    void callback_ComponentData(const std::shared_ptr<custom_interfaces::msg::Componentdata> msg_componentData);
 
 
 

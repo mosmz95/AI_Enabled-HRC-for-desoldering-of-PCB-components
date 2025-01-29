@@ -19,7 +19,7 @@ import rtde.rtde_config as rtde_config
 from safety_check.realsense_class import RealSense_Cam, get_realsense_devices
 from safety_check.hand_landmark_class import SafetyLayer
 
-from custome_interfaces.msg import Safetycheck
+from custom_interfaces.msg import Safetycheck
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
   

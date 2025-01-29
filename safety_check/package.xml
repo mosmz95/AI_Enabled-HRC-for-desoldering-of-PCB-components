@@ -13,7 +13,8 @@
   <test_depend>python3-pytest</test_depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
-  <exec_depend>custome_interfaces</exec_depend>
+  <exec_depend>custom_interfaces</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
 
   <export>
     <build_type>ament_python</build_type>

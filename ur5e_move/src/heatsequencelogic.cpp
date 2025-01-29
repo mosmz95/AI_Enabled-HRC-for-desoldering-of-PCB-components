@@ -14,8 +14,11 @@ HeatLogicNode::HeatLogicNode(std::shared_ptr<moveit_interface_cpp::MoveRobotClas
       resume_heating_process_ {false} {
     RCLCPP_INFO(this->get_logger(),"Normal node has been initialized");
     
-    safety_check_sb      = this->create_subscription<custome_interfaces::msg::Safetycheck> (
+    safety_check_sb      = this->create_subscription<custom_interfaces::msg::Safetycheck> (
     "knuckle_image", 1,std::bind(&HeatLogicNode::callback_safetycheck,this,std::placeholders::_1));//  
+
+    detected_component_data_sb = this->create_subscription<custom_interfaces::msg::Componentdata> (
+    "/detected_component_data", 1,std::bind(&HeatLogicNode::callback_ComponentData,this,std::placeholders::_1));//  Receiving the new component data
 
     heating_status_of_component_check_sb = this->create_subscription<std_msgs::msg::String> (
     "heating_status_of_component", 10,std::bind(&HeatLogicNode::callback_heatingstatusofcomponent,this,std::placeholders::_1));//  
@@ -35,11 +38,11 @@ HeatLogicNode::HeatLogicNode(std::shared_ptr<moveit_interface_cpp::MoveRobotClas
 
     
     
-void HeatLogicNode::callback_safetycheck(const std::shared_ptr<custome_interfaces::msg::Safetycheck> msg_safetycheck){
+void HeatLogicNode::callback_safetycheck(const std::shared_ptr<custom_interfaces::msg::Safetycheck> msg_safetycheck){
 
     // RCLCPP_INFO(this->get_logger(), "The subscription to safetycheck topic has been made.");
 
-    custome_interfaces::msg::Safetycheck rcv_msg = *msg_safetycheck;
+    custom_interfaces::msg::Safetycheck rcv_msg = *msg_safetycheck;
     if (this->safety_flag.data == false && rcv_msg.hand_presence.data== true){
         RCLCPP_INFO(this->get_logger(), "The safety mechanism must be activated.");
         std_msgs::msg::String msg_;
@@ -60,6 +63,13 @@ void HeatLogicNode::callback_safetycheck(const std::shared_ptr<custome_interface
 
     // RCLCPP_INFO(this->get_logger(), "The hand presense status is: %s", this->safety_flag.data ? "True": "False");
 
+}
+
+void HeatLogicNode::callback_ComponentData(const std::shared_ptr<custom_interfaces::msg::Componentdata> msg_componentData){
+    RCLCPP_INFO(this->get_logger(), "The new components' data has been received.");
+    std::vector<PcbComponent> new_component_data =  createComponentsFromROSMsg(msg_componentData->location_x,
+                                                     msg_componentData->location_y,
+                                                     msg_componentData->component_class);
 }
 
 // This function changes the heating status of a component to false.

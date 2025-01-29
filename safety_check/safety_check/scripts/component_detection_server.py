@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from custome_interfaces.srv import ComponentDetection
+from custom_interfaces.srv import ComponentDetection
 
 from ament_index_python.packages import get_package_share_directory
 from safety_check.realsense_class import RealSense_Cam, get_realsense_devices
@@ -42,28 +42,29 @@ class ComponentDetectionService(Node):
 
         return response
 
+    def detect_model(self, frame, component_id=[1]):
+        result = None
+        results = self.yolo_model(frame, classes = component_id, verbose = False)
+        annotated_frame = results[0].plot()
+        location = [( (float(bbox[0] + bbox[2])/2) , float((bbox[1] + bbox[3])/2) ) for bbox in results[0].boxes.xyxy]
+        classes_id = [float(value) for value in results[0].boxes.cls]
+        return annotated_frame, location, classes_id
+    
     # def detect_model(self, frame, component_id=[1]):
     #     result = None
-    #     results = self.yolo_model(frame, classes = component_id, verbose = False)
-    #     annotated_frame = results[0].plot()
-    #     location = [( (float(bbox[0] + bbox[2])/2) , float((bbox[1] + bbox[3])/2) ) for bbox in results[0].boxes.xyxy]
-    #     classes_id = [float(value) for value in results[0].boxes.cls]
-    #     return annotated_frame, location, classes_id
-    
-    def detect_model(model, frame, component_id=[1]):
-        result = None
-        results = model(frame, classes = component_id, verbose = False)
-        # annotated_frame = results[0].plot()
-        for bbox in results[0].boxes.xyxy :
-            cv2.rectangle(frame, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), color=(255, 0, 0), thickness=10) 
-        location = [( int((bbox[0] + bbox[2])/2) , int((bbox[1] + bbox[3])/2) ) for bbox in results[0].boxes.xyxy]
-        classes_id = [float(value) for value in results[0].boxes.cls]
-        font = cv2.FONT_HERSHEY_SIMPLEX
+    #     results =  self.yolo_model(frame, classes = component_id, verbose = False)
+    #     # annotated_frame = results[0].plot()
+    #     for bbox in results[0].boxes.xyxy :
+    #         cv2.rectangle(frame, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), color=(255, 0, 0), thickness=10) 
 
-        for i in range(len(classes_id)):
-            cv2.putText(frame, str(i+1), location[i], font, 5, (0, 0, 255), 10, cv2.LINE_AA)
+    #     location = [( int((bbox[0] + bbox[2])/2) , int((bbox[1] + bbox[3])/2) ) for bbox in results[0].boxes.xyxy]
+    #     classes_id = [float(value) for value in results[0].boxes.cls]
+    #     font = cv2.FONT_HERSHEY_SIMPLEX
+
+    #     for i in range(len(classes_id)):
+    #         cv2.putText(frame, str(i+1), location[i], font, 5, (0, 0, 255), 10, cv2.LINE_AA)
             
-        return frame, location, classes_id
+    #     return frame, location, classes_id
 def main():
     package_share_directory = get_package_share_directory('safety_check')
     yolo_model_path = os.path.join(package_share_directory, 'configs','best.pt')

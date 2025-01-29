@@ -75,5 +75,8 @@ class SafeRobotConfig {
 
 
 std::pair<std::vector<PcbComponent>, std::vector<SafeRobotConfig>> extract_data(const std::string& file_name);
-
+std::vector<PcbComponent> createComponentsFromROSMsg(const std::vector<double> &location_x,
+                                                     const std::vector<double> &location_y,
+                                                     const std::vector<uint8_t> &component_class);
 #endif
+
