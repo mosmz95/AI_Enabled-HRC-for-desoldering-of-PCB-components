@@ -8,7 +8,7 @@ import os
 from PIL import Image, ImageTk
 from functools import partial
 from custom_interfaces.srv import ComponentDetection
-from custom_interfaces.msg import Componentdata
+from custom_interfaces.msg import Componentdata, Llmfeedback
 
 import threading
 from sensor_msgs.msg import Image as ROSImage
@@ -35,7 +35,9 @@ class ComponentPublisherNode(Node):
         self.boundingboximages_publisher = self.create_publisher(ROSImage, "bounding_box_image",10)
 
         self.rawframe_subscription  = self.create_subscription( ROSImage,"rawframe_topcamera", self.callback_from_raw_frame,10 )
-        self.recording_command_to_vosk_publisher = self.create_publisher(String, '/robot_listening', 1  )
+        self.component_info_from_llm_subscription  = self.create_subscription( Llmfeedback,"com_id", self.callback_info_from_llm,1 )
+
+        self.recording_command_to_vosk_publisher = self.create_publisher(String, '/system_need', 1  )
         self.detected_componentdata_publisher = self.create_publisher(Componentdata, '/detected_component_data', 1  )
 
         
@@ -51,7 +53,9 @@ class ComponentPublisherNode(Node):
         while not self.component_detection_client.wait_for_service(1):
             self.get_logger().warn("Waiting for server of component detection ...")
 
-    
+    def callback_info_from_llm(self,msg:Llmfeedback):
+        self.get_logger().warn("The info from llm has been received ...")
+        return
         
     def callback_from_raw_frame(self, msg:ROSImage):
         # self.get_logger().info(f" A raw frame has been received.")
