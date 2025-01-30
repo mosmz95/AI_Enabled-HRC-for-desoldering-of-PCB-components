@@ -9,6 +9,8 @@ export ROS_DOMAIN_ID=1
 ros2 run safety_check gui
 
 ros2 run safety_check handlandmark
+ros2 run safety_check wrist_camera_publisher
+
 ros2 run safety_check component_detection_server
 ros2 run safety_check component_selection_client 
 
@@ -16,3 +18,9 @@ ros2 run safety_check component_selection_client
 
 
 ros2 launch ur5e_move heat_logic.launch.py ur_type:="ur5e"
+
+
+
+ros2 topic pub --once /com_id custom_interfaces/msg/Llmfeedback "{number_id: 3, type: 'ComponentCounter'}"
+
+ros2 topic pub --once /com_id custom_interfaces/msg/Llmfeedback "{number_id: 3, type: 'ComponentClass'}"

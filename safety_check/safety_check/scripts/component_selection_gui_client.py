@@ -29,16 +29,22 @@ COMPONENTS = {
 class ComponentPublisherNode(Node):
 
     def __init__(self):
+
         super().__init__('component_publisher_node')
         self.get_logger().info("The component detection client node has been started.")
         self.publisher = self.create_publisher(UInt8, 'component_id', 10)
         self.boundingboximages_publisher = self.create_publisher(ROSImage, "bounding_box_image",10)
 
-        self.rawframe_subscription  = self.create_subscription( ROSImage,"rawframe_topcamera", self.callback_from_raw_frame,10 )
+        # self.rawframe_subscription  = self.create_subscription( ROSImage,"rawframe_topcamera", self.callback_from_raw_frame,10 )
         self.component_info_from_llm_subscription  = self.create_subscription( Llmfeedback,"com_id", self.callback_info_from_llm,1 )
 
         self.recording_command_to_vosk_publisher = self.create_publisher(String, '/system_need', 1  )
         self.detected_componentdata_publisher = self.create_publisher(Componentdata, '/detected_component_data', 1  )
+        self.wristcamera_subscription  = self.create_subscription( ROSImage,"wristcamera", self.callback_wristcamera_frame,10 )
+
+        self.go_to_snapshot_position_publisher = self.create_publisher(String, '/go_snapshot_position', 1  )
+
+        self.fromvosk_subscription  = self.create_subscription( String,"received_command", self.callback_fromvosk,10 )
 
         
         self.component_detection_client = self.create_client(ComponentDetection,'component_bounding_box')
@@ -50,13 +56,49 @@ class ComponentPublisherNode(Node):
         self.bbx_imagebridge = CvBridge()
         self.bbx_frame_flag = False
 
+        self.wrist_camera_image = None
+
+        self.displayedtxt = None
+
         while not self.component_detection_client.wait_for_service(1):
             self.get_logger().warn("Waiting for server of component detection ...")
 
+    def callback_fromvosk(self,msg:String):
+        self.displayedtxt = msg.data
+        print(self.displayedtxt)
+
+
     def callback_info_from_llm(self,msg:Llmfeedback):
         self.get_logger().warn("The info from llm has been received ...")
+
+        component_or_class = msg.type
+
+        if component_or_class == "ComponentClass" :
+            self.get_logger().warn("The class of component will be determined for bounding box ...")
+            component_class = msg.number_id
+            if component_class >= 0 or component_class < 16:
+                self.get_logger().info(f"The class of {COMPONENTS[component_class]} has been determined for bounding box ...")
+                if self.wrist_camera_image is not None:
+                    self.send_detection_request(self.wrist_camera_image, component_class )
+                    self.get_logger().info(" The request of component detection has been sent")
+            else:
+                self.get_logger().warn("The class of component has been chosen wrongly..")
+
+        elif component_or_class == "ComponentCounter" :
+            self.get_logger().warn("The counter of component has been specified for desoldering ...")
+        else:
+            self.get_logger().warn("N valied info from llm has been received...")
         return
+    
+    def callback_wristcamera_frame(self, msg:ROSImage):
+        # self.get_logger().info(" A  wrist camera frame has been received.")
+        self.wrist_camera_image = msg
+        if self.component_id is not None:
+            self.send_detection_request(self.wrist_camera_image, self.component_id )
+            self.get_logger().info(" The request of component detection has been sent")
+            self.component_id = None
         
+    
     def callback_from_raw_frame(self, msg:ROSImage):
         # self.get_logger().info(f" A raw frame has been received.")
         
@@ -140,12 +182,49 @@ class ComponentGUI:
     
 
         self.voskicon = ImageTk.PhotoImage(self.photo_resize(os.path.join(self.file_path,"vosk_icon.png")))#
-        vosk_activation_button = tk.Button(self.root, text="VOSK Activator", image=self.voskicon, compound=tk.TOP,
+        vosk_activation_button = tk.Button(self.root, text="   VOSK Activator   ", image=self.voskicon, compound=tk.TOP,
                         command=self.vosk_activation_button_cb, font=("Helvetica", 12))
         vosk_activation_button.place(relx=0.4, rely=0.01, anchor='nw')
 
+        self.snapphoto = ImageTk.PhotoImage(self.photo_resize(os.path.join(self.file_path,"snapshot.jpg")))#
+        snapshotposition_button = tk.Button(self.root, text="Go to Snap shot position", image= self.snapphoto, compound=tk.TOP,
+                        command=self.snapshotposition_button_cb, font=("Helvetica", 12))
+        snapshotposition_button.place(relx=0.4, rely=0.2, anchor='nw')
+
+        self.text_frame = tk.Frame(self.root,width=100, height=50)
+        
+        # self.text_frame.pack(fill=tk.BOTH, expand=True,padx=20, pady=20)  # Fill the entire window and expand
+        self.text_frame.place(relx=0.6, rely=0.6, anchor='nw')
+        # Create a Scrollbar widget
+        self.scrollbar = tk.Scrollbar(self.text_frame, orient=tk.VERTICAL)
+
+        # Create a Text widget to display and edit the text message
+        self.text_field = tk.Text(self.text_frame, wrap=tk.NONE, yscrollcommand=self.scrollbar.set)
+        self.scrollbar.config(command=self.text_field.yview)
+
+        # # Pack the Text widget and Scrollbar widget inside the Frame
+        self.text_field.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+    def insert_text_and_scroll(self, text):
+        self.text_field.insert(tk.END, text)
+        self.scroll_to_end()
+
+    def scroll_to_end(self, event=None):
+        self.text_field.see(tk.END)
+
+
+    def snapshotposition_button_cb(self):
+        self.ros_node.get_logger().info(f"The cobot is going to snap shot position")
+        self.insert_text_and_scroll("The cobot is going to snap shot position\n")
+        msg = String()
+        msg.data = "snapshot"
+        self.ros_node.go_to_snapshot_position_publisher.publish(msg)
+
+
     def vosk_activation_button_cb(self):
         self.ros_node.get_logger().info(f"The vosk is listenning to you")
+        self.insert_text_and_scroll("The vosk is listenning to you\n")
         msg_to_be_sent_vosk = String()
         msg_to_be_sent_vosk.data = "Activate the VOSK"
         self.ros_node.recording_command_to_vosk_publisher.publish(msg_to_be_sent_vosk)
@@ -189,6 +268,7 @@ class ComponentGUI:
         # Callback when a component is clicked
         self.ros_node.publish_component_id(component_id)
         print(f"Button clicked for component ID: {component_id}")
+        self.insert_text_and_scroll(f"Button clicked for component ID: {component_id}\n")
         # self.ros_node.start_subscription() # subscribe to the image topic
        
 
@@ -213,9 +293,16 @@ class ComponentGUI:
         # rclpy.spin_once(self.rosnode, timeout_sec=0.1)
         self.root.after(100, self.gui_bbx_periodic_update)
 
+    def displaytexttogui(self):
+        if self.ros_node.displayedtxt is not None:
+            self.insert_text_and_scroll(self.ros_node.displayedtxt + "\n")
+            self.ros_node.displayedtxt = None
+        self.root.after(100, self.displaytexttogui)   
 
     def run_gui(self):
+
         self.gui_bbx_periodic_update()
+        self.displaytexttogui()
         self.root.mainloop()
 
 

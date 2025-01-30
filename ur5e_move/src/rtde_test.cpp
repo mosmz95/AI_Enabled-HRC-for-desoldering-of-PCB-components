@@ -15,9 +15,20 @@ int main()
     * of an output.
     */
   std::vector<double> joint_angle = rtde_receive.getTargetQ();
-  if (rtde_receive.getDigitalOutState(7))
-    std::cout << "Standard digital out (7) is HIGH  " << joint_angle[0] * 180 / 3.14<< std::endl;
-  else
+  std::cout << "j1: " << joint_angle[0] << std::endl;
+  std::cout << "j2  " << joint_angle[1] << std::endl;
+  std::cout << "j3 "  << joint_angle[2] <<  std::endl;
+  std::cout << "j4  " << joint_angle[3] << std::endl;
+  std::cout << "j5  " << joint_angle[4] << std::endl;
+  std::cout << "j6  " << joint_angle[5] << std::endl;
+  if (rtde_receive.getDigitalOutState(7)){
+    std::cout << "j1: " << joint_angle[0] << std::endl;
+    std::cout << "j2  " << joint_angle[1] << std::endl;
+    std::cout << "j3 "  << joint_angle[2] <<  std::endl;
+    std::cout << "j4  " << joint_angle[3] << std::endl;
+    std::cout << "j5  " << joint_angle[4] << std::endl;
+    std::cout << "j6  " << joint_angle[5] << std::endl;
+  }else
     std::cout << "Standard digital out (7) is LOW" << std::endl;
 
   if (rtde_receive.getDigitalOutState(16))

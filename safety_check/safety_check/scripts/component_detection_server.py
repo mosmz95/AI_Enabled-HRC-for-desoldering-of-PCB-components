@@ -31,40 +31,41 @@ class ComponentDetectionService(Node):
         self.get_logger().info(f'The component id is:{rcv_component_id}')
 
         rcv_raw_frame = self.imagebridge_request.imgmsg_to_cv2(request.raw_frame, desired_encoding='bgr8') 
-        print(rcv_raw_frame)
+        # print(rcv_raw_frame)
         annotated_frame, location, classes_id = self.detect_model(rcv_raw_frame,rcv_component_id)
 
-        print(classes_id)
+        print(location)
         response.annotated_frame = self.imagebridge_response.cv2_to_imgmsg( annotated_frame, encoding='bgr8')
         response.component_class = [int(id) for id in classes_id]
-        response.location_x = [loc[0] for loc in location]
-        response.location_y = [loc[1] for loc in location]
+        response.location_x = [float(loc[0]) for loc in location]
+        response.location_y = [float(loc[1]) for loc in location]
 
         return response
 
-    def detect_model(self, frame, component_id=[1]):
-        result = None
-        results = self.yolo_model(frame, classes = component_id, verbose = False)
-        annotated_frame = results[0].plot()
-        location = [( (float(bbox[0] + bbox[2])/2) , float((bbox[1] + bbox[3])/2) ) for bbox in results[0].boxes.xyxy]
-        classes_id = [float(value) for value in results[0].boxes.cls]
-        return annotated_frame, location, classes_id
-    
     # def detect_model(self, frame, component_id=[1]):
     #     result = None
-    #     results =  self.yolo_model(frame, classes = component_id, verbose = False)
-    #     # annotated_frame = results[0].plot()
-    #     for bbox in results[0].boxes.xyxy :
-    #         cv2.rectangle(frame, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), color=(255, 0, 0), thickness=10) 
-
-    #     location = [( int((bbox[0] + bbox[2])/2) , int((bbox[1] + bbox[3])/2) ) for bbox in results[0].boxes.xyxy]
+    #     results = self.yolo_model(frame, classes = component_id, verbose = False)
+    #     annotated_frame = results[0].plot()
+    #     location = [( (float(bbox[0] + bbox[2])/2) , float((bbox[1] + bbox[3])/2) ) for bbox in results[0].boxes.xyxy]
     #     classes_id = [float(value) for value in results[0].boxes.cls]
-    #     font = cv2.FONT_HERSHEY_SIMPLEX
+    #     return annotated_frame, location, classes_id
+    
+    def detect_model(self, frame, component_id=[1]):
+        result = None
+        results =  self.yolo_model(frame, classes = component_id, verbose = False)
+        # annotated_frame = results[0].plot()
+        for bbox in results[0].boxes.xyxy :
+            cv2.rectangle(frame, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), color=(255, 0, 0), thickness=3) 
 
-    #     for i in range(len(classes_id)):
-    #         cv2.putText(frame, str(i+1), location[i], font, 5, (0, 0, 255), 10, cv2.LINE_AA)
+        location = [( int((bbox[0] + bbox[2])/2) , int((bbox[1] + bbox[3])/2) ) for bbox in results[0].boxes.xyxy]
+        classes_id = [float(value) for value in results[0].boxes.cls]
+        font = cv2.FONT_HERSHEY_SIMPLEX
+
+        for i in range(len(classes_id)):
+            cv2.putText(frame, str(i+1), location[i], font, 2, (0, 0, 255), 5, cv2.LINE_AA)
             
-    #     return frame, location, classes_id
+        return frame, location, classes_id
+    
 def main():
     package_share_directory = get_package_share_directory('safety_check')
     yolo_model_path = os.path.join(package_share_directory, 'configs','best.pt')

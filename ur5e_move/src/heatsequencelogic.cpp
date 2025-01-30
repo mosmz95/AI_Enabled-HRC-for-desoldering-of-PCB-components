@@ -25,6 +25,8 @@ HeatLogicNode::HeatLogicNode(std::shared_ptr<moveit_interface_cpp::MoveRobotClas
 
     info_from_llm_sb = this->create_subscription<custom_interfaces::msg::Llmfeedback> (
     "/com_id", 10,std::bind(&HeatLogicNode::callback_info_llm,this,std::placeholders::_1));// 
+    snapconfig_request_sb = this->create_subscription<std_msgs::msg::String> (
+    "/go_snapshot_position", 10,std::bind(&HeatLogicNode::callback_snap_config,this,std::placeholders::_1));// 
 
     msg_to_gui_pb = this->create_publisher<std_msgs::msg::String>("msgtogui",10);
     safety_flag.data = false;
@@ -32,6 +34,7 @@ HeatLogicNode::HeatLogicNode(std::shared_ptr<moveit_interface_cpp::MoveRobotClas
     this->list_of_safety_configs = safety_configs;
     this->Homeconfig_of_robot = std::vector<double> {1.7249945402145386, -1.4170697343400498, 1.7957208792315882, 4.254665060634277, 4.630741119384766, 3.6119256019592285 };
     this->go_to_home_config(); // the robot always goes to home config at first time.
+    this->snap_config_of_robot = std::vector<double>  {1.5275, -1.38848, 1.39203, 5.11988, 4.50771, 3.18132};
     this->list_of_tuples_ = {};
      // Initialize list_of_tuples
     initialize_tuples();
@@ -39,7 +42,15 @@ HeatLogicNode::HeatLogicNode(std::shared_ptr<moveit_interface_cpp::MoveRobotClas
     
 }
 
-    
+void HeatLogicNode::callback_snap_config(const std::shared_ptr<std_msgs::msg::String> msg_safetycheck){
+    RCLCPP_INFO(this->get_logger(), "Going to the snap config.");
+    std::string msg = msg_safetycheck->data;
+    if ( msg == "snapshot"){
+        robot->goToJointGoal(this->snap_config_of_robot,"Rad");
+
+    }
+
+}  
     
 void HeatLogicNode::callback_safetycheck(const std::shared_ptr<custom_interfaces::msg::Safetycheck> msg_safetycheck){
 

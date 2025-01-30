@@ -31,12 +31,13 @@ class HeatLogicNode : public rclcpp::Node{
     std::shared_ptr<rclcpp::Subscription<std_msgs::msg::String>> heating_status_of_component_check_sb;
     std::shared_ptr<rclcpp::Subscription<custom_interfaces::msg::Componentdata>> detected_component_data_sb;
     std::shared_ptr<rclcpp::Subscription<custom_interfaces::msg::Llmfeedback>> info_from_llm_sb; // the operator request from llm
+    std::shared_ptr<rclcpp::Subscription<std_msgs::msg::String>> snapconfig_request_sb; // the operator request from llm
 
 
 
 
     std::vector<double> Homeconfig_of_robot;
-
+    std::vector<double>  snap_config_of_robot; 
     std_msgs::msg::Bool safety_flag; 
 
     std::vector<PcbComponent> list_of_components;
@@ -54,6 +55,7 @@ class HeatLogicNode : public rclcpp::Node{
 
     void callback_ComponentData(const std::shared_ptr<custom_interfaces::msg::Componentdata> msg_componentData);
     void callback_info_llm(const std::shared_ptr<custom_interfaces::msg::Llmfeedback> msg_llminfo);
+    void callback_snap_config(const std::shared_ptr<std_msgs::msg::String> msg_safetycheck);
 
 
 

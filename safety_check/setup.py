@@ -26,7 +26,9 @@ setup(
             "handlandmark =safety_check.scripts.hand_landmarker_publisher:main",
             "gui = safety_check.scripts.graphical_user_interfacev2:main",
             "component_selection_client = safety_check.scripts.component_selection_gui_client:main",
-            "component_detection_server = safety_check.scripts.component_detection_server:main"
+            "component_detection_server = safety_check.scripts.component_detection_server:main",
+            "wrist_camera_publisher = safety_check.scripts.wristcamera_publisher:main"
+
 
         ],
     },
