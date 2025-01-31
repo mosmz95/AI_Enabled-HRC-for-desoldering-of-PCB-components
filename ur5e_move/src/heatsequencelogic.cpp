@@ -62,6 +62,10 @@ void HeatLogicNode::callback_safetycheck(const std::shared_ptr<custom_interfaces
         std_msgs::msg::String msg_;
         msg_.data = "The safety mechanism must be activated.";
         this->msg_to_gui_pb->publish(msg_);
+        robot->move_group.stop();
+        SafeRobotConfig sf_cnf = list_of_safety_configs.at(0);
+        robot->goToJointGoal(sf_cnf.safeCobotConfig(),"Rad");
+
     }
 
     if (this->safety_flag.data == true && rcv_msg.hand_presence.data== false){

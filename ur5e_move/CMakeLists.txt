@@ -10,7 +10,7 @@ set(CMAKE_CXX_EXTENSIONS OFF) # Optional: Disables compiler-specific extensions
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(ur_rtde REQUIRED)
+# find_package(ur_rtde REQUIRED)
 
 find_package(rclcpp REQUIRED)
 find_package(moveit_msgs REQUIRED)
@@ -30,8 +30,8 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
 
 include_directories(include)
 
-add_executable(rtde_usage src/rtde_test.cpp)
-target_link_libraries(rtde_usage  PRIVATE ur_rtde::rtde)
+# add_executable(rtde_usage src/rtde_test.cpp)
+# target_link_libraries(rtde_usage  PRIVATE ur_rtde::rtde)
 
 add_executable(obj_test src/test_obj.cpp src/data_object.cpp)
 
@@ -40,7 +40,7 @@ ament_target_dependencies(sequence_logic rclcpp Boost custom_interfaces  ${THIS_
 
 
 install(TARGETS
-  rtde_usage
+  # rtde_usage
   obj_test
   sequence_logic
   DESTINATION   lib/${PROJECT_NAME}

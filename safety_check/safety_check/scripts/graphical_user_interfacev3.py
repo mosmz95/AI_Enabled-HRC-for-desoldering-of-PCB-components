@@ -3,7 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Bool,String,Int16
-from custome_interfaces.msg import Safetycheck
+from custom_interfaces.msg import Safetycheck
 from cv_bridge import CvBridge
 
 import sys
@@ -69,7 +69,7 @@ class MyGUI(tk.Tk):
         self.photo = ImageTk.PhotoImage(img)
         self.photo_gui = tk.Label(self, image=None)
         self.photo_gui.place(relx=0.65, rely=0.05, anchor='nw')
-        self.bbxtitle = tk.Label(self, text="Detected Components", font=("Helvetica", 18, "bold"))
+        self.bbxtitle = tk.Label(self, text="Detection Completed", font=("Helvetica", 18, "bold"))
         self.bbxtitle.place(relx=0.73, rely=0.01, anchor='nw')
         # lab logos
         self.lablogo = ImageTk.PhotoImage(lablogo)

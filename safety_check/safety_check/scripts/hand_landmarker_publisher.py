@@ -106,6 +106,7 @@ class GUIROS(Node):
             
             self.annotated_images_publisher.publish(msg_tobe_sent)
             
+            
             # cv2.imshow('Align Example', final_image)
             # key = cv2.waitKey(1)
             # if key & 0xFF == ord('q'):
