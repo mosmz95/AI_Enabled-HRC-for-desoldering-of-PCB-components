@@ -98,7 +98,7 @@ class ComponentPublisherNode(Node):
         if component_or_class == "ComponentClass" :
             self.get_logger().warn("The class of component will be determined for bounding box ...")
             component_class = msg.number_id
-            if component_class >= 0 or component_class < 16:
+            if component_class >= 0 and component_class < 16:
                 self.get_logger().info(f"The class of {COMPONENTS[component_class]} has been determined for bounding box ...")
                 if self.wrist_camera_image is not None:
                     self.send_detection_request(self.wrist_camera_image, component_class )
