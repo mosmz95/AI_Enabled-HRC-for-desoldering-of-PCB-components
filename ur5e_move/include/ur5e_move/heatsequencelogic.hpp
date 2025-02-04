@@ -50,7 +50,7 @@ class HeatLogicNode : public rclcpp::Node{
     std::thread heatinglogic_thread_;
     std::atomic<bool> handpresence_;
     std::thread saftymonitoring_thread_;
-
+    rclcpp::SubscriptionOptions llm_callback_options;
     void callback_safetycheck(const std::shared_ptr<custom_interfaces::msg::Safetycheck> msg_safetycheck);
 
     void callback_heatingstatusofcomponent(const std::shared_ptr<std_msgs::msg::String> msg_heatingstatus);

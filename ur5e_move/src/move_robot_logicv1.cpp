@@ -62,7 +62,7 @@ int main(int argc, char **argv){
     std::shared_ptr<HeatLogicNode> node2 = std::make_shared<HeatLogicNode>(ur5e,components,safety_configs);
 
     std::cout<<"Main thread is blocked "<<std::endl;
-    rclcpp::executors::SingleThreadedExecutor executor2;
+    rclcpp::executors::MultiThreadedExecutor executor2;
     executor2.add_node(node2);
     executor2.spin();
     std::cout<<"end effector:main 2"<<std::endl;

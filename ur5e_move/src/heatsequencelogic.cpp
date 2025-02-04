@@ -23,8 +23,14 @@ HeatLogicNode::HeatLogicNode(std::shared_ptr<moveit_interface_cpp::MoveRobotClas
     heating_status_of_component_check_sb = this->create_subscription<std_msgs::msg::String> (
     "heating_status_of_component", 10,std::bind(&HeatLogicNode::callback_heatingstatusofcomponent,this,std::placeholders::_1));//  
 
+    this->llm_callback_options =  rclcpp::SubscriptionOptions();
+    this->llm_callback_options.callback_group = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+
     info_from_llm_sb = this->create_subscription<custom_interfaces::msg::Llmfeedback> (
-    "/com_id", 10,std::bind(&HeatLogicNode::callback_info_llm,this,std::placeholders::_1));// 
+    "/com_id", 10,std::bind(&HeatLogicNode::callback_info_llm,this,std::placeholders::_1),this->llm_callback_options);// 
+    
+
+
     snapconfig_request_sb = this->create_subscription<std_msgs::msg::String> (
     "/go_snapshot_position", 10,std::bind(&HeatLogicNode::callback_snap_config,this,std::placeholders::_1));// 
 
@@ -60,9 +66,10 @@ void HeatLogicNode::callback_safetycheck(const std::shared_ptr<custom_interfaces
     custom_interfaces::msg::Safetycheck rcv_msg = *msg_safetycheck;
     if (this->safety_flag.data == false && rcv_msg.hand_presence.data== true){
         RCLCPP_INFO(this->get_logger(), "The safety mechanism must be activated.");
+    
         std_msgs::msg::String msg_;
         msg_.data = "The safety mechanism must be activated.";
-        handpresence_.store(true);
+        handpresence_.store(true); // this activates the safey mechanism
         this->msg_to_gui_pb->publish(msg_);
 
         // rclcpp_action::Client<moveit_msgs::action::MoveGroup> active_movegroup = robot->getMoveGroupClient();
@@ -261,15 +268,31 @@ void HeatLogicNode::safetymonitorying(){
 
     RCLCPP_INFO(this->get_logger(), "The safety monitorying is running.");
 
-    rclcpp_action::Client<moveit_msgs::action::MoveGroup>& mv_grp_client = robot->move_group.getMoveGroupClient();
+    // rclcpp_action::Client<moveit_msgs::action::MoveGroup>& mv_grp_client = robot->move_group.getMoveGroupClient();
 
     while (rclcpp::ok()){
 
+
         if (handpresence_.load()){
-            RCLCPP_INFO(this->get_logger(), "The robot is going to safety config.");
             robot->move_group.stop();
+
+            RCLCPP_INFO(this->get_logger(), "The robot is going to safety config.");
+            double plantime = robot->move_group.getPlanningTime();
+
+            std::cout<< "plantime is:"<<plantime<<std::endl;
+            robot->move_group.setPlanningTime(0.1);
+            plantime = robot->move_group.getPlanningTime();
+            double velocity_scaling_factor = 1;
+            double accel_scaling_factor = 1;
+
+            robot->move_group.setMaxVelocityScalingFactor(velocity_scaling_factor);
+            robot->move_group.setMaxVelocityScalingFactor(accel_scaling_factor);
+
+            std::cout<< "planning time is set to: "<<plantime<<std::endl;
+
             SafeRobotConfig sf_cnf = list_of_safety_configs.at(0);
             robot->goToJointGoal(sf_cnf.safeCobotConfig(),"Rad");
+            handpresence_.store(false);
         }
         
     }
