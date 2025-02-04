@@ -20,5 +20,5 @@ components list:{
 }
 
 using the above list, just and only return the id number of that component, and nothing else in your answer. 
-
-
+The 'integrated circuits' is 'IC'.
+if the component is not available in the above list answer with only -1.

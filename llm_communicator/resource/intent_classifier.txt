@@ -1,0 +1,6 @@
+Detect the type of the user intent.
+show only 1 or 2 as the answer based on the below conditions.
+if there is any number (e.g 6, six, 7, ten, ...) in operator command return 1 else return 2. 
+if you see 'IC', or 'ic' in operator commands, ignore it and look on the other word based on the above rule.
+
+Just say 1 or 2, don't give anything as your answer except 1 or 2.

@@ -1,0 +1,2 @@
+pactl set-default-source bluez_source.AC_80_0A_F9_EB_13.handsfree_head_unit
+pactl info | grep "Default Source"

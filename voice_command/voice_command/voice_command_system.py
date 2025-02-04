@@ -55,7 +55,7 @@ class VoiceCommandSystem(Node):
         This function will be called periodically (every second).
         It simulates receiving a voice command and publishes it to the 'received_command' topic.
         """
-        model_path = "/home/mostafa/workspace/vosk-model-en-us-0.42-gigaspeech/"
+        model_path = "/home/i40lab/Downloads/vosk-model-en-us-0.42-gigaspeech/"
 
         try:
             if model_path is None:
@@ -95,7 +95,7 @@ class VoiceCommandSystem(Node):
     def voice_command_system(self):
         try:
 
-            with sd.RawInputStream(samplerate=self.samplerate, blocksize = 36000, device=0, dtype='int16',
+            with sd.RawInputStream(samplerate=self.samplerate, blocksize = 36000, device=5, dtype='int16',
                                     channels=1, callback=callback):
                     print('#' * 80)
                     print('Press Ctrl+C to stop the recording')

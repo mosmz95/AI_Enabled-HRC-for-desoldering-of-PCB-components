@@ -11,7 +11,7 @@
 HeatLogicNode::HeatLogicNode(std::shared_ptr<moveit_interface_cpp::MoveRobotClass>  robot, 
     std::vector<PcbComponent> components, std::vector<SafeRobotConfig> safety_configs )
     :Node("ur5e_moveit_commander"), robot{robot}, pause_heating_process_ {false},
-      resume_heating_process_ {false} {
+      resume_heating_process_ {false}, handpresence_{false} {
     RCLCPP_INFO(this->get_logger(),"Normal node has been initialized");
     
     safety_check_sb      = this->create_subscription<custom_interfaces::msg::Safetycheck> (
@@ -39,6 +39,7 @@ HeatLogicNode::HeatLogicNode(std::shared_ptr<moveit_interface_cpp::MoveRobotClas
      // Initialize list_of_tuples
     initialize_tuples();
     // heatinglogic_thread_ = std::thread(&HeatLogicNode::heatlogic, this);
+    this->saftymonitoring_thread_ = std::thread(&HeatLogicNode::safetymonitorying, this);
     
 }
 
@@ -61,10 +62,14 @@ void HeatLogicNode::callback_safetycheck(const std::shared_ptr<custom_interfaces
         RCLCPP_INFO(this->get_logger(), "The safety mechanism must be activated.");
         std_msgs::msg::String msg_;
         msg_.data = "The safety mechanism must be activated.";
+        handpresence_.store(true);
         this->msg_to_gui_pb->publish(msg_);
-        robot->move_group.stop();
-        SafeRobotConfig sf_cnf = list_of_safety_configs.at(0);
-        robot->goToJointGoal(sf_cnf.safeCobotConfig(),"Rad");
+
+        // rclcpp_action::Client<moveit_msgs::action::MoveGroup> active_movegroup = robot->getMoveGroupClient();
+
+        // robot->move_group.stop();
+        // SafeRobotConfig sf_cnf = list_of_safety_configs.at(0);
+        // robot->goToJointGoal(sf_cnf.safeCobotConfig(),"Rad");
 
     }
 
@@ -250,7 +255,25 @@ void HeatLogicNode::heatlogic(){
 
         counter++;
     }
+}
 
+void HeatLogicNode::safetymonitorying(){
+
+    RCLCPP_INFO(this->get_logger(), "The safety monitorying is running.");
+
+    rclcpp_action::Client<moveit_msgs::action::MoveGroup>& mv_grp_client = robot->move_group.getMoveGroupClient();
+
+    while (rclcpp::ok()){
+
+        if (handpresence_.load()){
+            RCLCPP_INFO(this->get_logger(), "The robot is going to safety config.");
+            robot->move_group.stop();
+            SafeRobotConfig sf_cnf = list_of_safety_configs.at(0);
+            robot->goToJointGoal(sf_cnf.safeCobotConfig(),"Rad");
+        }
+        
+    }
+    
 }
 
 
