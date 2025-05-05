@@ -38,9 +38,12 @@ add_executable(obj_test src/test_obj.cpp src/data_object.cpp)
 add_executable(sequence_logic src/move_robot_logicv1.cpp src/moverobotclass.cpp src/data_object.cpp src/heatsequencelogic.cpp)
 ament_target_dependencies(sequence_logic rclcpp Boost custom_interfaces  ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
+add_executable(automatic_desoldering src/move_robot_automatic_sequence.cpp src/moverobotclass.cpp src/data_object.cpp src/desoldering_automatic_sequence.cpp)
+ament_target_dependencies(automatic_desoldering rclcpp Boost custom_interfaces  ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 install(TARGETS
   # rtde_usage
+  automatic_desoldering
   obj_test
   sequence_logic
   DESTINATION   lib/${PROJECT_NAME}

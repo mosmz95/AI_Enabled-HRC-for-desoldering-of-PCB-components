@@ -97,5 +97,8 @@
         "variant": "cpp",
         "*.ipp": "cpp"
     },
-    "cmake.sourceDirectory": "/home/mostafa/workspace/aiRedgio_ws/src/custom_interfaces"
+    "cmake.sourceDirectory": "/home/mostafa/workspace/aiRedgio_ws/src/custom_interfaces",
+    "editor.fontSize": 14,
+    "terminal.integrated.fontSize": 10,
+    "window.zoomLevel": 0
 }

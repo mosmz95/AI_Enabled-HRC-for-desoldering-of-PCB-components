@@ -6,7 +6,7 @@ from cv_bridge import CvBridge
 
 from PIL import Image, ImageTk
 from functools import partial
-from custome_interfaces.srv import ComponentDetection
+from custom_interfaces.srv import ComponentDetection
 import threading
 from sensor_msgs.msg import Image as ROSImage
 # Component dictionary

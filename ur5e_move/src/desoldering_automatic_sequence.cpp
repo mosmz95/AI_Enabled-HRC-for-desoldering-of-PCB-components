@@ -1,4 +1,4 @@
-#include "ur5e_move/heatsequencelogic.hpp"
+#include "ur5e_move/desoldering_automatic_sequence.hpp"
 #include <cmath>
 #include <algorithm>
 #include <chrono>
@@ -17,47 +17,26 @@ HeatLogicNode::HeatLogicNode(std::shared_ptr<moveit_interface_cpp::MoveRobotClas
     safety_check_sb      = this->create_subscription<custom_interfaces::msg::Safetycheck> (
     "knuckle_image", 1,std::bind(&HeatLogicNode::callback_safetycheck,this,std::placeholders::_1));//  
 
-    detected_component_data_sb = this->create_subscription<custom_interfaces::msg::Componentdata> (
-    "/detected_component_data", 1,std::bind(&HeatLogicNode::callback_ComponentData,this,std::placeholders::_1));//  Receiving the new component data
-
     heating_status_of_component_check_sb = this->create_subscription<std_msgs::msg::String> (
     "heating_status_of_component", 10,std::bind(&HeatLogicNode::callback_heatingstatusofcomponent,this,std::placeholders::_1));//  
 
-    this->llm_callback_options =  rclcpp::SubscriptionOptions();
-    this->llm_callback_options.callback_group = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-
-    info_from_llm_sb = this->create_subscription<custom_interfaces::msg::Llmfeedback> (
-    "/com_id", 10,std::bind(&HeatLogicNode::callback_info_llm,this,std::placeholders::_1),this->llm_callback_options);// 
-    
-
-
-    snapconfig_request_sb = this->create_subscription<std_msgs::msg::String> (
-    "/go_snapshot_position", 10,std::bind(&HeatLogicNode::callback_snap_config,this,std::placeholders::_1));// 
 
     msg_to_gui_pb = this->create_publisher<std_msgs::msg::String>("msgtogui",10);
-    safety_flag.data = false;
+
+    this->safety_flag.data = false;
     this->list_of_components = components;
     this->list_of_safety_configs = safety_configs;
     this->Homeconfig_of_robot = std::vector<double> {1.7249945402145386, -1.4170697343400498, 1.7957208792315882, 4.254665060634277, 4.630741119384766, 3.6119256019592285 };
     this->go_to_home_config(); // the robot always goes to home config at first time.
-    this->snap_config_of_robot = std::vector<double>  {1.5275, -1.38848, 1.39203, 5.11988, 4.50771, 3.18132};
     this->list_of_tuples_ = {};
      // Initialize list_of_tuples
     initialize_tuples();
-    // heatinglogic_thread_ = std::thread(&HeatLogicNode::heatlogic, this);
+    this->heatinglogic_thread_ = std::thread(&HeatLogicNode::heatlogic, this);
     this->saftymonitoring_thread_ = std::thread(&HeatLogicNode::safetymonitorying, this);
     
 }
 
-void HeatLogicNode::callback_snap_config(const std::shared_ptr<std_msgs::msg::String> msg_safetycheck){
-    RCLCPP_INFO(this->get_logger(), "Going to the snap config.");
-    std::string msg = msg_safetycheck->data;
-    if ( msg == "snapshot"){
-        robot->goToJointGoal(this->snap_config_of_robot,"Rad");
 
-    }
-
-}  
     
 void HeatLogicNode::callback_safetycheck(const std::shared_ptr<custom_interfaces::msg::Safetycheck> msg_safetycheck){
 
@@ -94,43 +73,10 @@ void HeatLogicNode::callback_safetycheck(const std::shared_ptr<custom_interfaces
     // RCLCPP_INFO(this->get_logger(), "The hand presense status is: %s", this->safety_flag.data ? "True": "False");
 
 }
-void HeatLogicNode::callback_info_llm(const std::shared_ptr<custom_interfaces::msg::Llmfeedback> msg_llminfo){
-    RCLCPP_INFO(this->get_logger(), "A new Llm request from the operator has been received.");
-    // type must be ComponentCounter or ComponentClass
-    unsigned int component_counter {0};
-    std::string class_or_component = msg_llminfo->type;
-    
-    if ( class_or_component == "ComponentCounter" ){
 
-        component_counter = msg_llminfo->number_id;
-        if(component_counter > 0 && component_counter <= this->list_of_components.size() ){
-            PcbComponent selected_component = this->list_of_components.at(component_counter - 1);
-            robot->goToJointGoal(selected_component.cobotConfig(),"Rad");
-                // cobot_.go_to_joint_state(closest_tuple.first.cobotconfig(), "rad");
-            std::this_thread::sleep_for(std::chrono::milliseconds(
-                    static_cast<int>(selected_component.heatDuration() * 1000)));
-            
-            robot->goToJointGoal(Homeconfig_of_robot,"Rad");
-        }else{
-            RCLCPP_ERROR(this->get_logger(), "Invalid component index received.");
 
-        }
 
-    }else if (class_or_component == "ComponentClass"){
 
-            RCLCPP_INFO(this->get_logger(), "The class of components for desoldering has been sepcified.");
-
-    }
-    
-
-}
-
-void HeatLogicNode::callback_ComponentData(const std::shared_ptr<custom_interfaces::msg::Componentdata> msg_componentData){
-    RCLCPP_INFO(this->get_logger(), "The new components' data has been received.");
-    std::vector<PcbComponent> new_component_data =  createComponentsFromROSMsg(msg_componentData->location_x,
-                                                     msg_componentData->location_y,
-                                                     msg_componentData->component_class);
-}
 
 // This function changes the heating status of a component to false.
 void HeatLogicNode::callback_heatingstatusofcomponent(const std::shared_ptr<std_msgs::msg::String> msg_heatingstatus){
@@ -150,9 +96,7 @@ void HeatLogicNode::callback_heatingstatusofcomponent(const std::shared_ptr<std_
     }
 }
 
-void HeatLogicNode::safety_measure(){
-    RCLCPP_INFO(this->get_logger(), "The safety measure is running.");
-}
+
 
 void HeatLogicNode::go_to_home_config(){
     
@@ -236,7 +180,7 @@ void HeatLogicNode::heatlogic(){
                 std::cout << "current: " << done_counter << std::endl;
             }
             if_number = counter;
-        } else {
+        } else {             // here the condition for pausing or resuming should be set
             // Find the closest component based on distance
             auto closest_tuple = *std::min_element(filtered_tuples.begin(), filtered_tuples.end(),
                                                    [](const auto& a, const auto& b) {

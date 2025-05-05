@@ -3,7 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Bool,String,Int16
-from custome_interfaces.msg import Safetycheck
+from custom_interfaces.msg import Safetycheck
 from cv_bridge import CvBridge
 
 import sys

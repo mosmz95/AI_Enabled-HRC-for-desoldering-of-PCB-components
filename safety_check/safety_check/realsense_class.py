@@ -153,7 +153,7 @@ class RealSense_Cam:
     
 
 if __name__ == "__main__":
-    from ultralytics import YOLO
+    # from ultralytics import YOLO
     from matplotlib import pyplot as plt
     from PIL import ImageTk, Image
     import io
