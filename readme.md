@@ -1,12 +1,12 @@
-# Intuitive AI-driven Human Robot Collaboration in desoldering of printed circuit boards (PCBs) considering the operator's safety  
+# Intuitive AI-Enabled Human Robot Collaboration in desoldering of printed circuit boards (PCBs) considering the operator's safety  
 
 
-In the experiment, a collaborative robot (UR5e) has been equipted with a hot gun (desoldering tool), the cobot heats up the components and an operator removes the desoldered components. The setup consists of two modules: (i)  AI-Based graphical user interface(GUI) which enables the operator to select the type of components he wants to desolder through a vocal command and the LLMs interperation or a direct select with a 'Button' on the GUI, (ii) Safety module which monitors the position of the desoldering tool with respect to operator's hand knuckls. Below you can find more elaboration on each modules:
+In the experiment, a collaborative robot (UR5e) has been equipted with a hot gun (desoldering tool), the cobot heats up the components and an operator removes the desoldered components. The setup consists of two modules: (i)  AI-Enabled graphical user interface(GUI) which enables the operator to select the type of components he/she wants to desolder through a vocal command and the LLMs interperation or a direct select with a 'Button' on the GUI, (ii) Safety module which monitors the distance of the desoldering tool with respect to operator's hand knuckls. Below you can find more elaboration on each modules:
 
 
 ### AI-Based GUI
 
-Initially, the operator clicks on the button "Go to Snap Shot Position", making the robot move to a predefined configuration to take a snap shot from the PCB. In the next step, the operator should determine the kind of component he/she wants to be desoldered by clicking on the grid of button at top left or by clicking the "Voice Input" button to select the kind vocally. Afterwards, the snap shot and kind of component will be forwareded to the Object detection model (YOLO model) and the result will be shown on the top right. If the operator is satisfied with the result of detection, he will click on the "Detection Completed" button. (The image on the bottom left showes the live stream of camera).
+Initially, the operator clicks on the button "Go to Snap Shot Position", making the robot move to a predefined configuration to take a snap shot from the PCB. In the next step, the operator should determine the kind of component he/she wants to be desoldered by clicking on the grid of button at top left or by clicking the "Voice Input" button to select the kind vocally. Afterwards, the snap shot and kind of component will be forwareded to the Object detection model (YOLOv8 model) and the result will be shown on the top right. If the operator is satisfied with the result of detection, he will click on the "Detection Completed" button. (The image on the bottom left showes the live stream of camera).
 <p align="center">
   <img src="repo_images/GUI.png" width="440" width="250"/></a>
 </p>
