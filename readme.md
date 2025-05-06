@@ -17,7 +17,7 @@ Initially, the operator clicks on the button "Go to Snap Shot Position", making 
   <img src="repo_images/hand monitorying.png" width="440" width="250"/></a>
 </p>
 
-#### Execution of 
+#### Execution Procedure
 
 1- Establish the communication with UR5e
 ```bash
