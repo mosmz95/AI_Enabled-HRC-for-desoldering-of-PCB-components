@@ -17,53 +17,69 @@ Initially, the operator clicks on the button "Go to Snap Shot Position", making 
   <img src="repo_images/hand monitorying.png" width="440" width="250"/></a>
 </p>
 
-#### How to run ?
+#### Execution of 
+
+1- Establish the communication with UR5e
 ```bash
 export ROS_DOMAIN_ID=1
 ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=192.168.0.100 launch_rviz:=false
 ```
+
+2 - Run the command for the trajectory planning of cobot using MoveIt
 ```bash
 export ROS_DOMAIN_ID=1
 ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:="ur5e" launch_rviz:=false
 ```
-```bash
 
+<!-- ```bash
+3 -   
 export ROS_DOMAIN_ID=1
 ros2 run safety_check gui
-```
-```bash
+``` -->
+3 - Run the safety module 
 
+```bash
 export ROS_DOMAIN_ID=1
 ros2 run safety_check handlandmark
 ```
+4 - Establish the communication with Robotiq Wrist camera for component detection
+
+
 ```bash
 
 export ROS_DOMAIN_ID=1
 ros2 run safety_check wrist_camera_publisher
 ```
+5 - The following command runs the YOLOv8 model for the component detection
+
 ```bash
 
 export ROS_DOMAIN_ID=1
 ros2 run safety_check component_detection_server
 ```
+6 - Run the command to pup up the GUI 
+
 ```bash
 
 export ROS_DOMAIN_ID=1
 ros2 run safety_check component_selection_client 
 ```
+7 - Running this command, allows the operator to ask the robot move to the desired component or
 
 ```bash
-
 export ROS_DOMAIN_ID=1
 ros2 launch ur5e_move heat_logic.launch.py ur_type:="ur5e"
 ```
+
+8 - Running this command, the robot sequentially heats the closest component to its origin 
+
 ```bash
 
 ros2 launch ur5e_move automatic_desoldering.launch.py ur_type:="ur5e"
 ```
-```bash
+<!-- ```bash
 
 ros2 topic pub --once /com_id custom_interfaces/msg/Llmfeedback "{number_id: 3, type: 'ComponentCounter'}"
 
 ros2 topic pub --once /com_id custom_interfaces/msg/Llmfeedback "{number_id: 1, type: 'ComponentClass'}"
-```
+``` -->
